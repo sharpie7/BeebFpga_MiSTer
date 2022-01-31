@@ -54,6 +54,8 @@ entity vidproc_orig is
         CLKEN       :   in  std_logic;
         nRESET      :   in  std_logic;
 
+			CE_PIX     : out std_logic;
+	
         -- Clock enable output to CRTC
         CLKEN_CRTC  :   out std_logic;
 
@@ -308,6 +310,9 @@ begin
     G(0) <= GG when r0_teletext = '0' else G_IN xor cursor_invert;
     B(0) <= BB when r0_teletext = '0' else B_IN xor cursor_invert;
 
+	 
+	 CE_PIX <= clken_pixel;
+	 
     -- Indicate mode 7 teletext is selected
     TTXT <= r0_teletext;
 

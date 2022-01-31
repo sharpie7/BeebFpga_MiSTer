@@ -35,7 +35,6 @@ set_global_assignment -name VHDL_FILE rtl/T65/T65.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/T65_ALU.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/T65_MCode.vhd
 set_global_assignment -name VHDL_FILE rtl/T65/T65_Pack.vhd
-set_global_assignment -name VERILOG_FILE rtl/Tube/gen_flag_v3.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/hp_byte.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/hp_bytequad.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/hp_flag_m.v

@@ -27,7 +27,7 @@ module emu
 	input         RESET,
 
 	//Must be passed to hps_io module
-	inout  [45:0] HPS_BUS,
+	inout  [47:0] HPS_BUS,
 
 	//Base video clock. Usually equals to CLK_SYS.
 	output        CLK_VIDEO,
@@ -53,6 +53,7 @@ module emu
 
 	input  [11:0] HDMI_WIDTH,
 	input  [11:0] HDMI_HEIGHT,
+	output        HDMI_FREEZE,
 
 `ifdef USE_FB
 	// Use framebuffer in DDRAM (USE_FB=1 in qsf)
@@ -110,7 +111,6 @@ module emu
 	output        SD_CS,
 	input         SD_CD,
 
-`ifdef USE_DDRAM
 	//High latency DDR3 RAM interface
 	//Use for non-critical time purposes
 	output        DDRAM_CLK,
@@ -123,9 +123,7 @@ module emu
 	output [63:0] DDRAM_DIN,
 	output  [7:0] DDRAM_BE,
 	output        DDRAM_WE,
-`endif
 
-`ifdef USE_SDRAM
 	//SDRAM interface with lower latency
 	output        SDRAM_CLK,
 	output        SDRAM_CKE,
@@ -138,9 +136,8 @@ module emu
 	output        SDRAM_nCAS,
 	output        SDRAM_nRAS,
 	output        SDRAM_nWE,
-`endif
 
-`ifdef DUAL_SDRAM
+`ifdef MISTER_DUAL_SDRAM
 	//Secondary SDRAM
 	input         SDRAM2_EN,
 	output        SDRAM2_CLK,
@@ -175,7 +172,8 @@ module emu
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
-assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+//assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+assign { SDRAM_A[12], SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = 0;
  
 assign LED_USER  = ioctl_download | (vsd_sel & sd_act);
@@ -183,6 +181,12 @@ assign LED_DISK  = {1'b1,~vsd_sel & sd_act};
 assign LED_POWER = 0;
 assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
+assign HDMI_FREEZE = 0;
+
+assign SDRAM_A[8] = clk_sel;
+assign SDRAM_A[9] = ce_vid;
+assign SDRAM_A[10] = VSync;
+assign SDRAM_A[11] = HSync;
 
 wire [1:0] ar = status[14:13];
 video_freak video_freak
@@ -223,7 +227,7 @@ parameter CONF_STR = {
 /////////////////  CLOCKS  ////////////////////////
 
 wire clk_sys; // IES: 96MHz (32 * 3), (24 * 4)
-wire clk_24 = clk_sys & ce_24;
+wire clk_48 = clk_sys & ce_48;
 wire clk_32 = clk_sys & ce_32;
 
 pll pll
@@ -234,12 +238,13 @@ pll pll
 );
 
 (* direct_enable=1 *) reg ce_32;
-(* direct_enable=1 *) reg ce_24;
+(* direct_enable=1 *) reg ce_48;
 always @(negedge clk_sys) begin
-	reg [1:0] div24, div32;
+	reg [1:0] div32;
+	reg [0:0] div48;
 	
-	div24 <= div24 + 1'd1;
-	ce_24 <= !div24;
+	div48 <= div48 + 1'd1;
+	ce_48 <= !div48;
 	
 	div32 <= div32 + 1'd1;
 	if(div32 == 2) div32 <= 0;
@@ -267,13 +272,13 @@ wire [15:0] ioctl_dout;
 wire        forced_scandoubler;
 wire [21:0] gamma_bus;
 
-wire [31:0] sd_lba;
+wire [31:0] sd_lba[1];
 wire        sd_rd;
 wire        sd_wr;
 wire        sd_ack;
 wire  [7:0] sd_buff_addr;
 wire [15:0] sd_buff_dout;
-wire [15:0] sd_buff_din;
+wire [15:0] sd_buff_din[1];
 wire        sd_buff_wr;
 wire        img_mounted;
 wire        img_readonly;
@@ -282,12 +287,15 @@ wire        sd_ack_conf;
 
 wire [64:0] RTC;
 
-hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
+// hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
+hps_io #(.CONF_STR(CONF_STR), .WIDE(1)) hps_io
+
+
 (
 	.clk_sys(clk_sys),
 	.HPS_BUS(HPS_BUS),
 
-	.conf_str(CONF_STR),
+	//.conf_str(CONF_STR),
 
 	.buttons(buttons),
 	.status(status),
@@ -309,7 +317,7 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 	.sd_rd(sd_rd),
 	.sd_wr(sd_wr),
 	.sd_ack(sd_ack),
-	.sd_ack_conf(sd_ack_conf),
+//	.sd_ack_conf(sd_ack_conf),
 	.sd_buff_addr(sd_buff_addr),
 	.sd_buff_dout(sd_buff_dout),
 	.sd_buff_din(sd_buff_din),
@@ -319,9 +327,9 @@ hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
 	.img_size(img_size),
 
 	.joystick_0(joy1),
-	.joystick_1(joy2),
-	.joystick_analog_0({joy1_y,joy1_x}),
-	.joystick_analog_1({joy2_y,joy2_x})
+	.joystick_1(joy2)//,
+//	.joystick_analog_0({joy1_y,joy1_x}),
+//	.joystick_analog_1({joy2_y,joy2_x})
 );
 
 /////////////////  RESET  /////////////////////////
@@ -457,7 +465,7 @@ always @(posedge clk_sys) old_we <= mem_we_n;
 
 ///////////////////////////////////////////////////
 
-wire reset_req;
+wire reset_req = reset;
 
 wire [7:0] joya_x = 8'hFF - {~ax[7],ax[6:0]};
 wire [7:0] joya_y = 8'hFF - {~ay[7],ay[6:0]};
@@ -466,36 +474,43 @@ wire [7:0] joyb_y = 8'hFF - {~joy2_y[7],joy2_y[6:0]};
 
 
 // ### added
-wire [1:0] ce_rate;
+//wire [1:0] ce_rate;
 wire       ce_vid;
 
 bbc_micro_core BBCMicro
 (
 	.clock_32(clk_32),
-	.clock_24(clk_24),
+	.clock_48(clk_48),
 
 	.hard_reset_n(~reset),
-	.reset_req(reset_req),
+//	.reset_req(reset_req),
 
-	.ps2_key(ps2_key),
-	.ps2_mouse(status[10] ? ps2_mouse : 25'd0),
+    .ps2_kbd_clk(),
+    .ps2_kbd_data(),
+    .ps2_mse_clk (),
+    .ps2_mse_data(),
+
+	// .ps2_key(ps2_key),
+	// .ps2_mouse(status[10] ? ps2_mouse : 25'd0),
 
 	.video_sel(clk_sel),
-// ### added
 	.video_cepix(ce_vid),
-	.video_cerate(ce_rate),
+//	.video_cerate(ce_rate),
 	.video_red(r),
 	.video_green(g),
 	.video_blue(b),
-	.video_vblank(VBlank),
-	.video_hblank(HBlank),
+//	.video_vblank(VBlank),
+//	.video_hblank(HBlank),
 	.video_vsync(VSync),
 	.video_hsync(HSync),
 
-	.audio_sn(audio_sn),
+	//.audio_sn(audio_sn),
+	.audio_l(),
+	.audio_r(),
 
 	.ext_nOE(),
 	.ext_nWE(mem_we_n),
+	.ext_nCS(),
 	.ext_A(mem_addr),
 	.ext_Dout(mem_addr[18] ? ram_dout : rom_data),
 	.ext_Din(mem_din),
@@ -508,20 +523,48 @@ bbc_micro_core BBCMicro
 	.caps_led(),
 	.shift_led(),
 	
-	.RTC(RTC),
+	//.RTC(RTC),
 
 	.keyb_dip({4'd0, ~status[12], ~status[9:7]}),
+	
+	.ext_keyb_led1(),
+	.ext_keyb_led2(),
+	.ext_keyb_led3(),
+	.ext_keyb_1mhz(),
+	.ext_keyb_en_n(),
+	.ext_keyb_pa(),
+	.ext_keyb_rst_n(),
+	.ext_keyb_ca2(),
+	.ext_keyb_pa7(),
+	
+	.ps2config(),
 
-	.joystick1_x(    status[11] ? {joyb_x,joyb_x[7:4]} : {joya_x,joya_x[7:4]}),
-	.joystick1_y(    status[11] ? {joyb_y,joyb_y[7:4]} : {joya_y,joya_y[7:4]}),
-	.joystick1_fire( status[11] ? ~joy2[4] : ~af),
+   .joystick1(),
+	.joystick2(),
+	
+	.avr_reset(),
+	.avr_RxD(),
+	.avr_TxD(),
 
-	.joystick2_x(   ~status[11] ? {joya_x,joya_x[7:4]} : {joyb_x,joyb_x[7:4]}),
-	.joystick2_y(   ~status[11] ? {joya_y,joya_y[7:4]} : {joyb_y,joyb_y[7:4]}),
-	.joystick2_fire(~status[11] ? ~joy2[4] : ~af),
-
+	.cpu_addr(SDRAM_DQ),
 	.m128_mode(m128),
-	.copro_mode(|status[6:5])
+	.copro_mode(|status[6:5]),
+	
+	.p_spi_ssel(),
+	.p_spi_sck(),
+	.p_spi_mosi(),
+	.p_spi_miso(),
+	.p_irq_b(),
+	.p_nmi_b(),
+	.p_rst_b(),
+	.ext_tube_r_nw(),
+	.ext_tube_nrst(),
+	.ext_tube_ntube(),
+	.ext_tube_phi2(),
+	.ext_tube_a(),
+	.ext_tube_di(),
+	.ext_tube_do(),
+	.test(SDRAM_A[7:0])
 );
 
 wire [7:0] audio_sn;
@@ -532,51 +575,55 @@ assign AUDIO_MIX = 0;
 assign AUDIO_S = 0;
 
 // ### Massive hack
-wire ce_vids = (ce_vid & (clk_sel ? ce_32 : ce_24));
-reg  ce_pix;
-always @(posedge CLK_VIDEO) begin
-	reg old_vs; // Old vertical sync
-	reg [2:0] rate;
-	reg vrate1, vrate2;
-	reg [2:0] div;
+// wire ce_vids = (ce_vid & (clk_sel ? ce_32 : ce_24));
+// reg  ce_pix;
+// always @(posedge CLK_VIDEO) begin
+	// reg old_vs; // Old vertical sync
+	// reg [2:0] rate;
+	// reg vrate1, vrate2;
+	// reg [2:0] div;
 	
-	old_vs <= VSync;
-	if(old_vs & ~VSync) begin // Vsync goes low?
-		rate <= 3'b100;
-		vrate2 <= vrate1;
-		vrate1 <= 0;
-	end
+	// old_vs <= VSync;
+	// if(old_vs & ~VSync) begin // Vsync goes low?
+		// rate <= 3'b100;
+		// vrate2 <= vrate1;
+		// vrate1 <= 0;
+	// end
 	
-	if(~HBlank & ~VBlank & ce_vids) begin
-		if(rate[2]) // First time we are here?
-			rate <= ce_rate; // Set rate to current rate and clear the top bit (ce_rate is only 2 bits)
-		else 	
-			if(rate[1:0] != ce_rate)  // rate has changes
-				vrate1 <= 1;          // set vrate1 to indicate a change
-	end
+	// if(~HBlank & ~VBlank & ce_vids) begin
+		// if(rate[2]) // First time we are here?
+			// rate <= ce_rate; // Set rate to current rate and clear the top bit (ce_rate is only 2 bits)
+		// else 	
+			// if(rate[1:0] != ce_rate)  // rate has changes
+				// vrate1 <= 1;          // set vrate1 to indicate a change
+	// end
 	
-	div <= div + 1'd1;
-	if(div == 5) div <= 0;
+	// div <= div + 1'd1;
+	// if(div == 5) div <= 0;
 
-	ce_pix <= vrate2 ? !div : ce_vids;
-end
+	// ce_pix <= vrate2 ? !div : ce_vids;
+// end
 
 wire [1:0] scale = status[3:2];
 
 wire HSync, VSync, HBlank, VBlank, clk_sel;
-wire r,g,b;
+wire [3:0] r,g,b;
 
 assign CLK_VIDEO = clk_sys;
 video_mixer #(640, 1, 1) mixer
 (
+	.ce_pix(ce_vid),
+	.HDMI_FREEZE(0),
+	.freeze_sync(),
+	
 	.*,
 
 	.hq2x(scale == 1),
 	.scandoubler(scale || forced_scandoubler),
 
-	.R({4{r}}),
-	.G({4{g}}),
-	.B({4{b}})
+	.R(4'd3),
+	.G({4{g[0]}}),
+	.B({4{b[0]}})
 );
 
 assign VGA_F1 = 0;
@@ -596,7 +643,8 @@ wire vsdmiso;
 sd_card #(1) sd_card
 (
 	.*,
-
+	.sd_lba(sd_lba[0]),
+	.sd_buff_din(sd_buff_din[0]),
 	.clk_spi(clk_sys),
 	.sdhc(1),
 	.sck(sdclk),

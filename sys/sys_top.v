@@ -126,6 +126,11 @@ module sys_top
 
 //////////////////////  Secondary SD  ///////////////////////////////////
 wire SD_CS, SD_CLK, SD_MOSI;
+// IES Bodge out SDRAM for debugging
+// wire [12:0] SDRAM_A;
+// wire [15:0] SDRAM_DQ;
+// wire [1:0] SDRAM_BA;
+// wire SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS, SDRAM_CLK, SDRAM_CKE;
 
 `ifndef MISTER_DUAL_SDRAM
 	wire sd_miso = SW[3] | SDIO_DAT[0];

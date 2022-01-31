@@ -87,15 +87,15 @@ entity bbc_micro_core is
     port (
         -- Clocks
 		-- IES In MISTer only _32 and _24
-        clock_27       : in    std_logic; -- IES Only used in scandouble
+ --       clock_27       : in    std_logic; -- IES Only used in scandouble
         clock_32       : in    std_logic; -- IES Apparently unused
         clock_48       : in    std_logic; -- IES Master clock for many things
-        clock_96       : in    std_logic; -- IES Only used in scandouble
+--        clock_96       : in    std_logic; -- IES Only used in scandouble
         clock_avr      : in    std_logic; -- IES Only used in ICEDebugger
 
         -- Hard reset (active low)
         hard_reset_n   : in    std_logic;
-		-- IES MISTer Also reset_req out
+		-- IES MISTer Also reset_req out <= not reset_n;
 
         -- Keyboard
         ps2_kbd_clk    : inout std_logic;
@@ -114,8 +114,9 @@ entity bbc_micro_core is
 
         -- Video
 		-- IES MISTer
-		-- 	video_sel      : out std_logic;
-		--  video_cepix    : out std_logic;
+		video_sel      : out std_logic;
+		video_cepix    : out std_logic; -- IES Added from MISTer
+		
         video_red      : out   std_logic_vector (3 downto 0);
         video_green    : out   std_logic_vector (3 downto 0);
         video_blue     : out   std_logic_vector (3 downto 0);
@@ -163,7 +164,7 @@ entity bbc_micro_core is
 
 
         -- Config outputs (from PS/2 keyboard)
-        config         : out   std_logic_vector(9 downto 0); -- IES New
+        ps2config         : out   std_logic_vector(9 downto 0); -- IES New
 
         -- Format of Video
         -- Bit 1,0 select the video format
@@ -173,10 +174,10 @@ entity bbc_micro_core is
         --   11 - 31.250KHz VGA using the Mist Scan Doubler (Modes 0..6) and SAA5050 VGA (Mode 7)
         -- Bit 2 inverts hsync
         -- Bit 3 inverts vsync
-        vid_mode       : in    std_logic_vector(3 downto 0); -- IES New
+        -- vid_mode       : in    std_logic_vector(3 downto 0); -- IES New
 
         -- Hint that a wide aspect ratio should be used (e.g to stretch mode 7)
-        aspect_wide    : out   std_logic; -- IES New
+        -- aspect_wide    : out   std_logic; -- IES New
 
         -- Main Joystick and Secondary Joystick
         -- Bit 0 - Up (active low)
@@ -249,11 +250,11 @@ signal reset            :   std_logic;
 signal reset_n          :   std_logic;
 
 -- Clock enables for the scan doubler
-signal clken_pixel      :   std_logic;
-signal clken_vga        :   std_logic;
+-- signal clken_pixel      :   std_logic;
+-- signal clken_vga        :   std_logic;
 
 -- Counter to divide 96MHz down to 32MHz or 24MHz
-signal vga3_counter     :   unsigned(1 downto 0);
+-- signal vga3_counter     :   unsigned(1 downto 0);
 
 -- Counter to divide 48MHz down to 16MHz and 8MHz
 signal div3_counter     :   unsigned(1 downto 0);
@@ -338,6 +339,7 @@ signal b_in             :   std_logic;
 signal r_out            :   std_logic_vector(RGB_WIDTH - 1 downto 0);
 signal g_out            :   std_logic_vector(RGB_WIDTH - 1 downto 0);
 signal b_out            :   std_logic_vector(RGB_WIDTH - 1 downto 0);
+signal crtc_cepix       : std_logic;
 
 -- Scan Doubler signals (Mist)
 signal rgbi_in          :   std_logic_vector(RGB_WIDTH * 3 downto 0);
@@ -587,50 +589,50 @@ begin
     -- COMPONENT INSTANCES
     -------------------------
 
-    GenDebug: if IncludeICEDebugger generate
-
-        core : entity work.MOS6502CpuMonCore
-            generic map (
-                UseT65Core   => UseT65Core,
-                UseAlanDCore => UseAlanDCore
-                )
-            port map (
-                clock_avr    => clock_avr,
-                busmon_clk   => clock_48,
-                busmon_clken => cpu_clken1,
-                cpu_clk      => clock_48,
-                cpu_clken    => cpu_clken,
-                IRQ_n        => cpu_irq_n,
-                NMI_n        => cpu_nmi_n,
-                Sync         => cpu_sync,
-                Addr         => cpu_a(15 downto 0),
-                R_W_n        => cpu_r_nw,
-                Din          => cpu_di,
-                Dout         => cpu_do,
-                SO_n         => cpu_so_n,
-                Res_n        => reset_n,
-                Rdy          => cpu_ready,
-                trig         => "00",
-                avr_RxD      => avr_RxD,
-                avr_TxD      => avr_TxD,
-                sw_reset_cpu => '0',
-                sw_reset_avr => avr_reset,
-                led_bkpt     => open,
-                led_trig0    => open,
-                led_trig1    => open,
-                tmosi        => open,
-                tdin         => open,
-                tcclk        => open
-                );
-
-        process(clock_48)
-        begin
-            if rising_edge(clock_48) then
-                cpu_clken1 <= cpu_clken;
-            end if;
-        end process;
-
-    end generate;
+--    GenDebug: if IncludeICEDebugger generate
+--
+--        core : entity work.MOS6502CpuMonCore
+--            generic map (
+--                UseT65Core   => UseT65Core,
+--                UseAlanDCore => UseAlanDCore
+--                )
+--            port map (
+--                clock_avr    => clock_avr,
+--                busmon_clk   => clock_48,
+--                busmon_clken => cpu_clken1,
+--                cpu_clk      => clock_48,
+--                cpu_clken    => cpu_clken,
+--                IRQ_n        => cpu_irq_n,
+--                NMI_n        => cpu_nmi_n,
+--                Sync         => cpu_sync,
+--                Addr         => cpu_a(15 downto 0),
+--                R_W_n        => cpu_r_nw,
+--                Din          => cpu_di,
+--                Dout         => cpu_do,
+--                SO_n         => cpu_so_n,
+--                Res_n        => reset_n,
+--                Rdy          => cpu_ready,
+--                trig         => "00",
+--                avr_RxD      => avr_RxD,
+--                avr_TxD      => avr_TxD,
+--                sw_reset_cpu => '0',
+--                sw_reset_avr => avr_reset,
+--                led_bkpt     => open,
+--                led_trig0    => open,
+--                led_trig1    => open,
+--                tmosi        => open,
+--                tdin         => open,
+--                tcclk        => open
+--                );
+--
+--        process(clock_48)
+--        begin
+--            if rising_edge(clock_48) then
+--                cpu_clken1 <= cpu_clken;
+--            end if;
+--        end process;
+--
+--    end generate;
 
     GenT65Core: if UseT65Core and not IncludeICEDebugger generate
         core : entity work.T65
@@ -738,7 +740,8 @@ begin
             port map (
                 CLOCK           => clock_48,
                 CLKEN           => vid_clken,
-                nRESET          => hard_reset_n,
+                nRESET          => hard_reset_n, -- To Add clk_sel, crtc_cepix
+					 CE_PIX          => crtc_cepix,
                 CLKEN_CRTC      => crtc_clken,
                 CLKEN_CRTC_ADR  => crtc_clken_adr,
                 CLKEN_COUNT     => clken_counter,
@@ -993,7 +996,7 @@ begin
             INT        => ps2_keyb_int,
             BREAK_OUT  => ps2_keyb_break,
             DIP_SWITCH => keyb_dip,
-            CONFIG     => config
+            CONFIG     => ps2config
             );
 
     -- Logic to swap the mouse and keyboard, and handle open collector driving
@@ -1948,102 +1951,102 @@ begin
     -- Input clock enable (for the 48MHz input clock)
     --   mhz12_active = 0: 16MHz
     --   mhz12_active = 1: 12MHz
-    clken_pixel <= ttxt_clken when mhz12_active = '1' else vid_clken;
+    --   clken_pixel <= ttxt_clken when mhz12_active = '1' else vid_clken;
 
     -- Output clock enable (for the 96MHz output clock)
     -- mhz12_active = 0: divide by 3 -> 32MHz
     -- mhz12_active = 1: divide by 4 -> 24MHz
-    process(clock_96)
-    begin
-        if rising_edge(clock_96) then
-            if (mhz12_active = '0' and vga3_counter = 2) or (mhz12_active = '1' and vga3_counter = 3) then
-                vga3_counter <= (others => '0');
-                clken_vga <= '1';
-            else
-                vga3_counter <= vga3_counter + 1;
-                clken_vga <= '0';
-            end if;
-        end if;
-    end process;
+    -- process(clock_96)
+    -- begin
+        -- if rising_edge(clock_96) then
+            -- if (mhz12_active = '0' and vga3_counter = 2) or (mhz12_active = '1' and vga3_counter = 3) then
+                -- vga3_counter <= (others => '0');
+                -- clken_vga <= '1';
+            -- else
+                -- vga3_counter <= vga3_counter + 1;
+                -- clken_vga <= '0';
+            -- end if;
+        -- end if;
+    -- end process;
 
-    inst_mist_scandoubler: entity work.mist_scandoubler
-    generic map (
-        -- WIDTH is width of individual rgb in/out ports
-        WIDTH => RGB_WIDTH
-    )
-    port map (
-        clk => clock_96,
-        clk_en => clken_vga,
-        clk_16 => clock_48,
-        clk_16_en => clken_pixel,
-        hs_in => crtc_hsync_n,
-        vs_in => crtc_vsync_n,
-        r_in => r_out,
-        g_in => g_out,
-        b_in => b_out,
-        hs_out => vga0_hs,
-        vs_out => vga0_vs,
-        r_out => vga0_r,
-        g_out => vga0_g,
-        b_out => vga0_b,
-        is15k => open
-    );
-    crtc_hsync_n <= not crtc_hsync;
-    crtc_vsync_n <= not crtc_vsync;
+    -- inst_mist_scandoubler: entity work.mist_scandoubler
+    -- generic map (
+      --  WIDTH is width of individual rgb in/out ports
+        -- WIDTH => RGB_WIDTH
+    -- )
+    -- port map (
+        -- clk => clock_96,
+        -- clk_en => clken_vga,
+        -- clk_16 => clock_48,
+        -- clk_16_en => clken_pixel,
+        -- hs_in => crtc_hsync_n,
+        -- vs_in => crtc_vsync_n,
+        -- r_in => r_out,
+        -- g_in => g_out,
+        -- b_in => b_out,
+        -- hs_out => vga0_hs,
+        -- vs_out => vga0_vs,
+        -- r_out => vga0_r,
+        -- g_out => vga0_g,
+        -- b_out => vga0_b,
+        -- is15k => open
+    -- );
+    -- crtc_hsync_n <= not crtc_hsync;
+    -- crtc_vsync_n <= not crtc_vsync;
 
 -----------------------------------------------
 -- Scan Doubler from RGB2VGA project
 -----------------------------------------------
 
-    rgbi_in <= r_out & g_out & b_out & '0';
+    -- rgbi_in <= r_out & g_out & b_out & '0';
 
-    inst_rgb2vga_scandoubler: entity work.rgb2vga_scandoubler
-    generic map (
-        -- WIDTH is width of combined rgbi in/out ports
-        WIDTH => RGB_WIDTH * 3 + 1
-    )
-    port map (
-        clock => clock_48,
-        clken => clken_pixel,
-        clk25 => clock_27,
-        mode => mhz12_active,
-        rgbi_in => rgbi_in,
-        hSync_in => crtc_hsync,
-        vSync_in => crtc_vsync,
-        rgbi_out => rgbi_out,
-        hSync_out => vga1_hs,
-        vSync_out => vga1_vs
-    );
+    -- inst_rgb2vga_scandoubler: entity work.rgb2vga_scandoubler
+    -- generic map (
+       -- WIDTH is width of combined rgbi in/out ports
+        -- WIDTH => RGB_WIDTH * 3 + 1
+    -- )
+    -- port map (
+        -- clock => clock_48,
+        -- clken => clken_pixel,
+        -- clk25 => clock_27,
+        -- mode => mhz12_active,
+        -- rgbi_in => rgbi_in,
+        -- hSync_in => crtc_hsync,
+        -- vSync_in => crtc_vsync,
+        -- rgbi_out => rgbi_out,
+        -- hSync_out => vga1_hs,
+        -- vSync_out => vga1_vs
+    -- );
 
-    vga1_r  <= rgbi_out(RGB_WIDTH * 3 downto RGB_WIDTH * 2 + 1);
-    vga1_g  <= rgbi_out(RGB_WIDTH * 2 downto RGB_WIDTH * 1 + 1);
-    vga1_b  <= rgbi_out(RGB_WIDTH * 1 downto RGB_WIDTH * 0 + 1);
+    -- vga1_r  <= rgbi_out(RGB_WIDTH * 3 downto RGB_WIDTH * 2 + 1);
+    -- vga1_g  <= rgbi_out(RGB_WIDTH * 2 downto RGB_WIDTH * 1 + 1);
+    -- vga1_b  <= rgbi_out(RGB_WIDTH * 1 downto RGB_WIDTH * 0 + 1);
 
 -----------------------------------------------
 -- 24MHz to 27MHz Scan Retimer (by DMB)
 -----------------------------------------------
 
-    inst_retimer: entity work.retimer
-    generic map (
-        -- WIDTH is width of individual rgb in/out ports
-        WIDTH => RGB_WIDTH
-    )
-    port map (
-        clk_in    => clock_48,
-        clken_in  => ttxt_clken,
-        clk_out   => clock_27,
-        clken_out => '1',
-        hs_in     => crtc_hsync_n,
-        vs_in     => crtc_vsync_n,
-        r_in      => r_out,
-        g_in      => g_out,
-        b_in      => b_out,
-        hs_out    => vga2_hs,
-        vs_out    => vga2_vs,
-        r_out     => vga2_r,
-        g_out     => vga2_g,
-        b_out     => vga2_b
-    );
+    -- inst_retimer: entity work.retimer
+    -- generic map (
+       -- WIDTH is width of individual rgb in/out ports
+        -- WIDTH => RGB_WIDTH
+    -- )
+    -- port map (
+        -- clk_in    => clock_48,
+        -- clken_in  => ttxt_clken,
+        -- clk_out   => clock_27,
+        -- clken_out => '1',
+        -- hs_in     => crtc_hsync_n,
+        -- vs_in     => crtc_vsync_n,
+        -- r_in      => r_out,
+        -- g_in      => g_out,
+        -- b_in      => b_out,
+        -- hs_out    => vga2_hs,
+        -- vs_out    => vga2_vs,
+        -- r_out     => vga2_r,
+        -- g_out     => vga2_g,
+        -- b_out     => vga2_b
+    -- );
 
 
 -----------------------------------------------
@@ -2059,65 +2062,74 @@ begin
 
     --- Indicate to the parent module when a 12MHz Pixel Clock is being used
     -- e.g. for HDMI aspect ratio switching
-    aspect_wide <= mhz12_active;
+    -- aspect_wide <= mhz12_active;
 
-    -- The SAA5050 24MHz VGA mode is enabled
-    vga_mode <= '1' when (vid_mode(0) = '1' and ttxt_active = '1') else '0';
+    --The SAA5050 24MHz VGA mode is enabled
+    -- vga_mode <= '1' when (vid_mode(0) = '1' and ttxt_active = '1') else '0';
 
-    -- The video output is taken from the Mist Scan Doubler
-    vga0_mode <= '1' when (vid_mode(1 downto 0) = "11" and ttxt_active = '0') or vid_mode(1 downto 0) = "10" else '0';
+   -- The video output is taken from the Mist Scan Doubler
+    -- vga0_mode <= '1' when (vid_mode(1 downto 0) = "11" and ttxt_active = '0') or vid_mode(1 downto 0) = "10" else '0';
 
-    -- The video output is taken from the RGB2VGA Scan Doubler
-    vga1_mode <= '1' when vid_mode(1 downto 0) = "01" and ttxt_active = '0' else '0';
+    --The video output is taken from the RGB2VGA Scan Doubler
+    -- vga1_mode <= '1' when vid_mode(1 downto 0) = "01" and ttxt_active = '0' else '0';
 
-    -- The video output is taken from the Retimer
-    vga2_mode <= '1' when vid_mode(1 downto 0) = "01" and ttxt_active = '1' else '0';
+    --The video output is taken from the Retimer
+    -- vga2_mode <= '1' when vid_mode(1 downto 0) = "01" and ttxt_active = '1' else '0';
 
-    -- CRTC drives video out (CSYNC on HSYNC output, VSYNC high)
-    hsync_int   <= vga0_hs when vga0_mode = '1' else
-                   vga1_hs when vga1_mode = '1' else
-                   vga2_hs when vga2_mode = '1' else
-              crtc_hsync_n when  vga_mode = '1' else
-                   not (crtc_hsync or crtc_vsync);
+    --CRTC drives video out (CSYNC on HSYNC output, VSYNC high)
+    -- hsync_int   <= vga0_hs when vga0_mode = '1' else
+                   -- vga1_hs when vga1_mode = '1' else
+                   -- vga2_hs when vga2_mode = '1' else
+              -- crtc_hsync_n when  vga_mode = '1' else
+                   -- not (crtc_hsync or crtc_vsync);
 
-    vsync_int   <= vga0_vs when vga0_mode = '1' else
-                   vga1_vs when vga1_mode = '1' else
-                   vga2_vs when vga2_mode = '1' else
-              crtc_vsync_n when  vga_mode = '1' else
-                   '1';
+    -- vsync_int   <= vga0_vs when vga0_mode = '1' else
+                   -- vga1_vs when vga1_mode = '1' else
+                   -- vga2_vs when vga2_mode = '1' else
+              -- crtc_vsync_n when  vga_mode = '1' else
+                   -- '1';
 
-    video_hsync <= hsync_int xor vid_mode(2);
+    -- video_hsync <= hsync_int xor vid_mode(2);
 
-    video_vsync <= vsync_int xor vid_mode(3);
+    -- video_vsync <= vsync_int xor vid_mode(3);
 
-    final_r <= vga0_r when vga0_mode = '1' else
-               vga1_r when vga1_mode = '1' else
-               vga2_r when vga2_mode = '1' else
-               r_out;
+    -- final_r <= vga0_r when vga0_mode = '1' else
+               -- vga1_r when vga1_mode = '1' else
+               -- vga2_r when vga2_mode = '1' else
+               -- r_out;
 
-    final_g <= vga0_g when vga0_mode = '1' else
-               vga1_g when vga1_mode = '1' else
-               vga2_g when vga2_mode = '1' else
-               g_out;
+    -- final_g <= vga0_g when vga0_mode = '1' else
+               -- vga1_g when vga1_mode = '1' else
+               -- vga2_g when vga2_mode = '1' else
+               -- g_out;
 
-    final_b <= vga0_b when vga0_mode = '1' else
-               vga1_b when vga1_mode = '1' else
-               vga2_b when vga2_mode = '1' else
-               b_out;
+    -- final_b <= vga0_b when vga0_mode = '1' else
+               -- vga1_b when vga1_mode = '1' else
+               -- vga2_b when vga2_mode = '1' else
+               -- b_out;
 
-    map_video_nula: if IncludeVideoNuLA generate
-    begin
-        video_red   <= final_r;
-        video_green <= final_g;
-        video_blue  <= final_b;
-    end generate;
+    -- map_video_nula: if IncludeVideoNuLA generate
+    -- begin
+        -- video_red   <= final_r;
+        -- video_green <= final_g;
+        -- video_blue  <= final_b;
+    -- end generate;
 
-    map_video_orig: if not IncludeVideoNuLA generate
-    begin
-        video_red   <= (others => final_r(0));
-        video_green <= (others => final_g(0));
-        video_blue  <= (others => final_b(0));
-    end generate;
+    -- map_video_orig: if not IncludeVideoNuLA generate
+    -- begin
+        -- video_red   <= (others => final_r(0));
+        -- video_green <= (others => final_g(0));
+        -- video_blue  <= (others => final_b(0));
+    -- end generate;
+	
+	video_hsync <= crtc_hsync;
+    video_vsync <= crtc_vsync;
+    video_red   <= (others => r_out(0));
+    video_green <= (others => g_out(0));
+    video_blue  <= (others => b_out(0));
+    video_cepix <= crtc_cepix when ttxt_active = '0' else ttxt_clken;
+    video_sel   <= not ttxt_active;
+	
 
 -----------------------------------------------
 -- Master 128 additions
