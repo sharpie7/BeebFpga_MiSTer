@@ -2218,6 +2218,6 @@ begin
     cpu_addr <= cpu_a(15 downto 0);
 
     -- Test output
-    test <= mouse_via_pb_in(7 downto 5) & "0" & mouse_via_cb2_in &  mouse_via_pb_in(2) &  mouse_via_cb1_in & mouse_via_pb_in(0);
+    test <= "0000" & hard_reset_n & keyb_break & sys_via_enable & crtc_enable;
 
 end architecture;

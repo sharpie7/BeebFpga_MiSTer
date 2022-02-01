@@ -504,8 +504,8 @@ bbc_micro_core BBCMicro
 	.video_hsync(HSync),
 
 	//.audio_sn(audio_sn),
-	.audio_l(),
-	.audio_r(),
+	.audio_l(AUDIO_L),
+	.audio_r(AUDIO_R),
 
 	.ext_nOE(),
 	.ext_nWE(mem_we_n),
@@ -568,8 +568,8 @@ bbc_micro_core BBCMicro
 
 wire [7:0] audio_sn;
 
-assign AUDIO_L = {audio_sn, 8'd0};
-assign AUDIO_R = {audio_sn, 8'd0};
+//assign AUDIO_L = {audio_sn, 8'd0};
+//assign AUDIO_R = {audio_sn, 8'd0};
 assign AUDIO_MIX = 0;
 assign AUDIO_S = 0;
 
@@ -612,7 +612,6 @@ assign CLK_VIDEO = clk_sys;
 video_mixer #(640, 1, 1) mixer
 (
 	.ce_pix(ce_vid),
-	.HDMI_FREEZE(0),
 	.freeze_sync(),
 	
 	.*,
