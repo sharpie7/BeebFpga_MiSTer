@@ -98,9 +98,9 @@ entity bbc_micro_core is
 		-- IES MISTer Also reset_req out <= not reset_n;
 
         -- Keyboard
-        ps2_kbd_clk    : inout std_logic;
-        ps2_kbd_data   : inout std_logic;
-		-- IES MISTer ps2_key        : in  std_logic_vector (10 downto 0);
+--        ps2_kbd_clk    : inout std_logic;
+--        ps2_kbd_data   : inout std_logic;
+		mister_key       : in std_logic_vector (10 downto 0);
 
         -- Mouse
         ps2_mse_clk    : inout std_logic;
@@ -108,7 +108,7 @@ entity bbc_micro_core is
 		-- IES MISTer ps2_mouse      : in  std_logic_vector (24 downto 0);
 
         -- Control input to exchange Keyboard and Mouse connections
-        ps2_swap       : in    std_logic := '0'; -- IES New
+--        ps2_swap       : in    std_logic := '0'; -- IES New
 		
 		-- IES MISTer RTC            : in  std_logic_vector (64 downto 0);
 
@@ -931,93 +931,109 @@ begin
         ps2_mse_data_out <= '1';
     end generate;
 
+
+    keyb : entity work.misterkeyboard port map (
+        clock_32, 
+		hard_reset_n, 
+		mhz1_clken,
+        mister_key,
+        keyb_enable_n,
+        keyb_column,
+        keyb_row,
+        keyb_out,
+        keyb_int,
+        keyb_break,
+        keyb_dip
+        );
+		
+		
     -- Original Keyboard Enabled
-    keyboard_orig: if UseOrigKeyboard generate
-        ext_keyb_led3  <= '1';     -- motor LED would be driven off serial ULA
-        ext_keyb_led2  <= ic32(7); -- caps LED
-        ext_keyb_led1  <= ic32(6); -- shift LED
-        ext_keyb_1mhz  <= mhz1_clken;
-        ext_keyb_en_n  <= keyb_enable_n;
-        ext_keyb_pa    <= keyb_row & keyb_column;
-        keyb_out       <= ext_keyb_pa7 or ps2_keyb_out;
-        keyb_int       <= ext_keyb_ca2 or ps2_keyb_int;
-        keyb_break     <= (not ext_keyb_rst_n) or ps2_keyb_break;
-    end generate;
+    -- keyboard_orig: if UseOrigKeyboard generate
+        -- ext_keyb_led3  <= '1';     -- motor LED would be driven off serial ULA
+        -- ext_keyb_led2  <= ic32(7); -- caps LED
+        -- ext_keyb_led1  <= ic32(6); -- shift LED
+        -- ext_keyb_1mhz  <= mhz1_clken;
+        -- ext_keyb_en_n  <= keyb_enable_n;
+        -- ext_keyb_pa    <= keyb_row & keyb_column;
+        -- keyb_out       <= ext_keyb_pa7 or ps2_keyb_out;
+        -- keyb_int       <= ext_keyb_ca2 or ps2_keyb_int;
+        -- keyb_break     <= (not ext_keyb_rst_n) or ps2_keyb_break;
+    -- end generate;
 
     -- Original Keyboard Disabled
-    keyboard_ps2: if not UseOrigKeyboard generate
-        ext_keyb_led3  <= '1'; -- motor LED
-        ext_keyb_led2  <= '1'; -- caps LED
-        ext_keyb_led1  <= '1'; -- shift LED
-        ext_keyb_1mhz  <= '1';
-        ext_keyb_en_n  <= '1';
-        ext_keyb_pa    <= (others => '1');
-        keyb_out       <= ps2_keyb_out;
-        keyb_int       <= ps2_keyb_int;
-        keyb_break     <= ps2_keyb_break;
-    end generate;
+    -- keyboard_ps2: if not UseOrigKeyboard generate
+        -- ext_keyb_led3  <= '1'; -- motor LED
+        -- ext_keyb_led2  <= '1'; -- caps LED
+        -- ext_keyb_led1  <= '1'; -- shift LED
+        -- ext_keyb_1mhz  <= '1';
+        -- ext_keyb_en_n  <= '1';
+        -- ext_keyb_pa    <= (others => '1');
+        -- keyb_out       <= ps2_keyb_out;
+        -- keyb_int       <= ps2_keyb_int;
+        -- keyb_break     <= ps2_keyb_break;
+    -- end generate;
 
     -- PS/2 Keyboard Interface
-    keyboard_ps2interface : entity work.ps2interface
-        generic map(
-            MainClockSpeed => 48000000
-        )
-        port map(
-           ps2_clk      => ps2_kbd_clk_in,
-           ps2_clk_out  => ps2_kbd_clk_out,
-           ps2_data     => ps2_kbd_data_in,
-           ps2_data_out => ps2_kbd_data_out,
-           clk          => clock_48,
-           rst          => not hard_reset_n,
-           tx_data      => ps2_keyb_cmd,
-           write        => ps2_keyb_write,
-           rx_data      => ps2_keyb_data,
-           read         => ps2_keyb_valid,
-           busy         => ps2_keyb_busy,
-           err          => ps2_keyb_error
-        );
+    -- keyboard_ps2interface : entity work.ps2interface
+        -- generic map(
+            -- MainClockSpeed => 48000000
+        -- )
+        -- port map(
+           -- ps2_clk      => ps2_kbd_clk_in,
+           -- ps2_clk_out  => ps2_kbd_clk_out,
+           -- ps2_data     => ps2_kbd_data_in,
+           -- ps2_data_out => ps2_kbd_data_out,
+           -- clk          => clock_48,
+           -- rst          => not hard_reset_n,
+           -- tx_data      => ps2_keyb_cmd,
+           -- write        => ps2_keyb_write,
+           -- rx_data      => ps2_keyb_data,
+           -- read         => ps2_keyb_valid,
+           -- busy         => ps2_keyb_busy,
+           -- err          => ps2_keyb_error
+        -- );
 
     -- PS/2 Keyboard Controller
-    keyboard_controller : entity work.keyboard
-        port map (
-            CLOCK      => clock_48,
-            nRESET     => hard_reset_n,
-            CLKEN_1MHZ => mhz1_clken,
-            KEYB_CMD   => ps2_keyb_cmd,
-            KEYB_WRITE => ps2_keyb_write,
-            KEYB_DATA  => ps2_keyb_data,
-            KEYB_VALID => ps2_keyb_valid,
-            KEYB_ERROR => ps2_keyb_error,
-            KEYB_BUSY  => ps2_keyb_busy,
-            AUTOSCAN   => keyb_enable_n,
-            COLUMN     => keyb_column,
-            ROW        => keyb_row,
-            KEYPRESS   => ps2_keyb_out,
-            INT        => ps2_keyb_int,
-            BREAK_OUT  => ps2_keyb_break,
-            DIP_SWITCH => keyb_dip,
-            CONFIG     => ps2config
-            );
+    -- keyboard_controller : entity work.keyboard
+        -- port map (
+            -- CLOCK      => clock_48,
+            -- nRESET     => hard_reset_n,
+            -- CLKEN_1MHZ => mhz1_clken,
+            -- KEYB_CMD   => ps2_keyb_cmd,
+            -- KEYB_WRITE => ps2_keyb_write,
+            -- KEYB_DATA  => ps2_keyb_data,
+            -- KEYB_VALID => ps2_keyb_valid,
+            -- KEYB_ERROR => ps2_keyb_error,
+            -- KEYB_BUSY  => ps2_keyb_busy,
+            -- AUTOSCAN   => keyb_enable_n,
+            -- COLUMN     => keyb_column,
+            -- ROW        => keyb_row,
+            -- KEYPRESS   => ps2_keyb_out,
+            -- INT        => ps2_keyb_int,
+            -- BREAK_OUT  => ps2_keyb_break,
+            -- DIP_SWITCH => keyb_dip,
+            -- CONFIG     => ps2config
+            -- );
 
     -- Logic to swap the mouse and keyboard, and handle open collector driving
 
-    ps2_kbd_clk_in  <= ps2_kbd_clk  when ps2_swap = '0' else ps2_mse_clk;
-    ps2_mse_clk_in  <= ps2_mse_clk  when ps2_swap = '0' else ps2_kbd_clk;
-    ps2_kbd_data_in <= ps2_kbd_data when ps2_swap = '0' else ps2_mse_data;
-    ps2_mse_data_in <= ps2_mse_data when ps2_swap = '0' else ps2_kbd_data;
+    -- ps2_kbd_clk_in  <= ps2_kbd_clk  when ps2_swap = '0' else ps2_mse_clk;
+    -- ps2_mse_clk_in  <= ps2_mse_clk  when ps2_swap = '0' else ps2_kbd_clk;
+    -- ps2_kbd_data_in <= ps2_kbd_data when ps2_swap = '0' else ps2_mse_data;
+    -- ps2_mse_data_in <= ps2_mse_data when ps2_swap = '0' else ps2_kbd_data;
 
-    ps2_kbd_clk  <= '0' when ps2_kbd_clk_out = '0' and ps2_swap = '0' else
-                    '0' when ps2_mse_clk_out = '0' and ps2_swap = '1' else
-                    'Z';
-    ps2_mse_clk  <= '0' when ps2_mse_clk_out = '0' and ps2_swap = '0' else
-                    '0' when ps2_kbd_clk_out = '0' and ps2_swap = '1' else
-                    'Z';
-    ps2_kbd_data <= '0' when ps2_kbd_data_out = '0' and ps2_swap = '0' else
-                    '0' when ps2_mse_data_out = '0' and ps2_swap = '1' else
-                    'Z';
-    ps2_mse_data <= '0' when ps2_mse_data_out = '0' and ps2_swap = '0' else
-                    '0' when ps2_kbd_data_out = '0' and ps2_swap = '1' else
-                    'Z';
+    -- ps2_kbd_clk  <= '0' when ps2_kbd_clk_out = '0' and ps2_swap = '0' else
+                    -- '0' when ps2_mse_clk_out = '0' and ps2_swap = '1' else
+                    -- 'Z';
+    -- ps2_mse_clk  <= '0' when ps2_mse_clk_out = '0' and ps2_swap = '0' else
+                    -- '0' when ps2_kbd_clk_out = '0' and ps2_swap = '1' else
+                    -- 'Z';
+    -- ps2_kbd_data <= '0' when ps2_kbd_data_out = '0' and ps2_swap = '0' else
+                    -- '0' when ps2_mse_data_out = '0' and ps2_swap = '1' else
+                    -- 'Z';
+    -- ps2_mse_data <= '0' when ps2_mse_data_out = '0' and ps2_swap = '0' else
+                    -- '0' when ps2_kbd_data_out = '0' and ps2_swap = '1' else
+                    -- 'Z';
 
     -- Analog to Digital Convertor
     adc: entity work.upd7002 port map (

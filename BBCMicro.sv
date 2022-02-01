@@ -173,7 +173,7 @@ assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
 //assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
-assign { SDRAM_A[12], SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+assign {SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = 0;
  
 assign LED_USER  = ioctl_download | (vsd_sel & sd_act);
@@ -185,8 +185,9 @@ assign HDMI_FREEZE = 0;
 
 assign SDRAM_A[8] = clk_sel;
 assign SDRAM_A[9] = ce_vid;
-assign SDRAM_A[10] = VSync;
-assign SDRAM_A[11] = HSync;
+assign SDRAM_A[10] = HSync;
+assign SDRAM_A[11] = VSync;
+assign SDRAM_A[12] = r;
 
 wire [1:0] ar = status[14:13];
 video_freak video_freak
@@ -485,12 +486,10 @@ bbc_micro_core BBCMicro
 	.hard_reset_n(~reset),
 //	.reset_req(reset_req),
 
-    .ps2_kbd_clk(),
-    .ps2_kbd_data(),
     .ps2_mse_clk (),
     .ps2_mse_data(),
 
-	// .ps2_key(ps2_key),
+	 .mister_key(ps2_key),
 	// .ps2_mouse(status[10] ? ps2_mouse : 25'd0),
 
 	.video_sel(clk_sel),

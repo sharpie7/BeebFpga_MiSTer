@@ -4,6 +4,7 @@ set_global_assignment -name VHDL_FILE rtl/bbc_micro_core.vhd
 set_global_assignment -name VHDL_FILE rtl/CoPro6502.vhd
 set_global_assignment -name VHDL_FILE rtl/CoProSPI.vhd
 set_global_assignment -name VHDL_FILE rtl/keyboard.vhd
+set_global_assignment -name VHDL_FILE rtl/mister_keyboard.vhd
 set_global_assignment -name VHDL_FILE rtl/m6522.vhd
 set_global_assignment -name VHDL_FILE rtl/mc6845.vhd
 set_global_assignment -name VHDL_FILE rtl/ps2_intf.vhd
