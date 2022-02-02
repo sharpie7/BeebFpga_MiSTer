@@ -120,7 +120,8 @@ entity bbc_micro_core is
         video_red      : out   std_logic_vector (3 downto 0);
         video_green    : out   std_logic_vector (3 downto 0);
         video_blue     : out   std_logic_vector (3 downto 0);
-		-- IES MISTer also vblank and hblank out (unused?)
+		  video_vblank   : out   std_logic;
+		  video_hblank   : out   std_logic;
         video_vsync    : out   std_logic;
         video_hsync    : out   std_logic;
 
@@ -325,6 +326,7 @@ signal crtc_cursor      :   std_logic;
 constant crtc_lpstb     :   std_logic := '0';
 signal crtc_ma          :   std_logic_vector(13 downto 0);
 signal crtc_ra          :   std_logic_vector(4 downto 0);
+signal crtc_hblank      :   std_logic;
 
 -- Decoded display address after address translation for hardware
 -- scrolling
@@ -361,7 +363,7 @@ signal vga2_b           :   std_logic_vector(RGB_WIDTH - 1 downto 0);
 signal vga2_hs          :   std_logic;
 signal vga2_vs          :   std_logic;
 
-signal vga_mode         :   std_logic; -- Runs the SAA5050 at 24Mhz
+signal vga_mode         :   std_logic := '0'; -- Runs the SAA5050 at 24Mhz
 signal vga0_mode        :   std_logic; -- Use the Mist Scan Doubler
 signal vga1_mode        :   std_logic; -- Use the RGB2VGA Scan Doubler
 signal vga2_mode        :   std_logic; -- Use the 24MHz to 27MHz Retimer
@@ -385,6 +387,7 @@ signal ttxt_b           :   std_logic;
 signal ttxt_y           :   std_logic;
 signal ttxt_active      :   std_logic;
 signal mhz12_active     :   std_logic;
+signal ttxt_hblank      :   std_logic;
 
 -- System VIA signals
 signal sys_via_do       :   std_logic_vector(7 downto 0);
@@ -696,6 +699,8 @@ begin
         crtc_do,
         crtc_vsync,
         crtc_hsync,
+		  video_vblank,
+        crtc_hblank,
         crtc_de,
         crtc_cursor,
         crtc_lpstb,
@@ -776,6 +781,8 @@ begin
         ttxt_dew,
         ttxt_crs,
         ttxt_lose,
+		  crtc_hblank,
+        ttxt_hblank,
         ttxt_r, ttxt_g, ttxt_b, ttxt_y
         );
 
@@ -2145,6 +2152,7 @@ begin
     video_blue  <= (others => b_out(0));
     video_cepix <= crtc_cepix when ttxt_active = '0' else ttxt_clken;
     video_sel   <= not ttxt_active;
+	 video_hblank<= crtc_hblank when ttxt_active = '0' else ttxt_hblank;
 	
 
 -----------------------------------------------

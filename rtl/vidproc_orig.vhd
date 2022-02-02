@@ -169,6 +169,7 @@ begin
     -- Pixel clock can be divided by 1,2,4 or 8 depending on the value
     -- programmed at r0_pixel_rate
     -- 00 = /8, 01 = /4, 10 = /2, 11 = /1
+
     clken_pixel <=
         CLKEN                                                   when r0_pixel_rate = "11" else
         (CLKEN and not clken_counter(0))                        when r0_pixel_rate = "10" else
@@ -211,17 +212,20 @@ begin
         if nRESET = '0' then
             shiftreg <= (others => '0');
         elsif rising_edge(CLOCK) then
-            if clken_pixel = '1' then
-                if clken_fetch = '1' then
-                    -- Fetch next byte from RAM into shift register.  This always occurs in
-                    -- cycle 0, and also in cycle 8 if the CRTC is clocked at double rate.
-                    shiftreg <= DI_RAM;
-                else
-                    -- Clock shift register and input '1' at LSB
-                    shiftreg <= shiftreg(6 downto 0) & "1";
-                end if;
-            end if;
-        end if;
+	 -- IES: According to http://beebwiki.mdfs.net/Video_ULA , 
+    -- the vidproc will do shift register loads even if there is no pixel 
+	 -- (ie the fetch timer just causes fetches independently of the pixel timer). 
+	 -- "If 10 columns are selected and the video clock rate is 2 MHz, only the odd bits of each byte 
+	 -- will affect the display"
+					 if clken_fetch = '1' then
+						  -- Fetch next byte from RAM into shift register.  This always occurs in
+						  -- cycle 0, and also in cycle 8 if the CRTC is clocked at double rate.
+						  shiftreg <= DI_RAM;
+					 elsif clken_pixel = '1' then
+						  -- Clock shift register and input '1' at LSB
+						  shiftreg <= shiftreg(6 downto 0) & "1";
+					 end if;
+				 end if;
     end process;
 
     -- Cursor generation
@@ -310,8 +314,11 @@ begin
     G(0) <= GG when r0_teletext = '0' else G_IN xor cursor_invert;
     B(0) <= BB when r0_teletext = '0' else B_IN xor cursor_invert;
 
+	 -- IES: Make a consistent set of "virtual pixels" (same in all modes)
+	 -- which is what scansouble sees. 
+	 -- In some modes the real pixels span two or four virtual pixels horizontally
 	 
-	 CE_PIX <= clken_pixel;
+	 CE_PIX <= CLKEN;
 	 
     -- Indicate mode 7 teletext is selected
     TTXT <= r0_teletext;

@@ -87,6 +87,10 @@ port (
     -- Load output shift register enable - high during active video
     LOSE        :   in  std_logic; -- DE
 
+	 
+	 HBLANK_IN  :   in  std_logic;
+    HBLANK_OUT :   out std_logic;
+	 
     -- Video out
     R           :   out std_logic;
     G           :   out std_logic;
@@ -101,6 +105,7 @@ architecture rtl of saa5050 is
 signal di_r         :   std_logic_vector(6 downto 0);
 signal dew_r        :   std_logic;
 signal lose_r       :   std_logic;
+signal hblank_r     :   std_logic;
 -- Data input registered in the pixel clock domain
 signal code         :   std_logic_vector(6 downto 0);
 signal line_addr    :   unsigned(3 downto 0);
@@ -114,6 +119,9 @@ signal disp_enable  :   std_logic;
 -- Latched timing signals for detection of falling edges
 signal dew_latch    :   std_logic;
 signal lose_latch   :   std_logic;
+signal hbl_latch    :   std_logic;
+signal hbl,hbl2     :   std_logic;
+signal hbld         :   std_logic_vector(2 downto 0);
 signal disp_enable_latch    :   std_logic;
 
 -- Row and column addressing is handled externally.  We just need to
@@ -173,6 +181,7 @@ signal double_high2 :   std_logic;
 
 begin
 
+    HBLANK_OUT <= hbld(1);
 
     -- Generate flash signal for 3:1 ratio
     flash <= flash_counter(5) and flash_counter(4);
@@ -184,11 +193,13 @@ begin
             di_r <= (others => '0');
             dew_r <= '0';
             lose_r <= '0';
+				hblank_r <= '1';
         elsif rising_edge(DI_CLOCK) then
             if DI_CLKEN = '1' then
                 di_r <= DI;
                 dew_r <= DEW;
                 lose_r <= LOSE;
+					 hblank_r <= HBLANK_IN;
             end if;
         end if;
     end process;
@@ -207,9 +218,11 @@ begin
         elsif rising_edge(CLOCK) then
             if CLKEN = '1' then
                 code <= di_r;
+					 hbld <= hbld(1 downto 0) & hbld(0);
                 if pixel_counter = 0 then
                     code_r        <= code;
                     disp_enable_r <= disp_enable;
+						  hbld          <= hbld(1 downto 0) & hbl;
                     fg_r          <= fg;
                     bg_r          <= bg;
                     conceal_r     <= conceal;
@@ -237,6 +250,7 @@ begin
                 -- Register syncs for edge detection
                 dew_latch <= dew_r;
                 lose_latch <= lose_r;
+					 hbl_latch <= hblank_r;
                 disp_enable_latch <= disp_enable;
 
                 -- When first entering double-height mode start on top row
@@ -249,6 +263,8 @@ begin
                     -- Start of next character and delayed display enable
                     pixel_counter <= (others => '0');
                     disp_enable <= lose_latch;
+						  hbl2 <= hbl_latch;
+                    hbl <= hbl2;
                 else
                     pixel_counter <= pixel_counter + 1;
                 end if;

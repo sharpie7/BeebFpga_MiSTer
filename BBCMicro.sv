@@ -183,11 +183,19 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 assign HDMI_FREEZE = 0;
 
+assign SDRAM_A[0] = 'Z;
+assign SDRAM_A[1] = 'Z;
+assign SDRAM_A[2] = 'Z;
+assign SDRAM_A[3] = 'Z;
+assign SDRAM_A[4] = 'Z;
+assign SDRAM_A[5] = 'Z;
+assign SDRAM_A[6] = HBlank;
+assign SDRAM_A[7] = VBlank;
 assign SDRAM_A[8] = clk_sel;
-assign SDRAM_A[9] = ce_vid;
+assign SDRAM_A[9] = ce_pix;
 assign SDRAM_A[10] = HSync;
 assign SDRAM_A[11] = VSync;
-assign SDRAM_A[12] = r;
+assign SDRAM_A[12] = CLK_VIDEO;
 
 wire [1:0] ar = status[14:13];
 video_freak video_freak
@@ -397,7 +405,7 @@ always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
 	case({m128, mem_addr[17:14]})
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
-		'b0_10_00: rom_addr[17:14] =  1; //bbcb/swmmfs.rom       
+		'b0_10_00: rom_addr[17:14] =  0; //bbcb/swmmfs.rom         *** IES DISABLED
 		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom       
 		'b1_00_10: rom_addr[17:14] =  4; //m128/adfs1-57.rom     
@@ -476,7 +484,7 @@ wire [7:0] joyb_y = 8'hFF - {~joy2_y[7],joy2_y[6:0]};
 
 // ### added
 //wire [1:0] ce_rate;
-wire       ce_vid;
+wire       ce_pix;
 
 bbc_micro_core BBCMicro
 (
@@ -493,13 +501,13 @@ bbc_micro_core BBCMicro
 	// .ps2_mouse(status[10] ? ps2_mouse : 25'd0),
 
 	.video_sel(clk_sel),
-	.video_cepix(ce_vid),
+	.video_cepix(ce_pix),
 //	.video_cerate(ce_rate),
-	.video_red(r),
-	.video_green(g),
-	.video_blue(b),
-//	.video_vblank(VBlank),
-//	.video_hblank(HBlank),
+	.video_red(red_vid),
+	.video_green(green_vid),
+	.video_blue(blue_vid),
+	.video_vblank(VBlank),
+	.video_hblank(HBlank),
 	.video_vsync(VSync),
 	.video_hsync(HSync),
 
@@ -563,7 +571,7 @@ bbc_micro_core BBCMicro
 	.ext_tube_a(),
 	.ext_tube_di(),
 	.ext_tube_do(),
-	.test(SDRAM_A[7:0])
+	.test()
 );
 
 wire [7:0] audio_sn;
@@ -606,12 +614,13 @@ assign AUDIO_S = 0;
 wire [1:0] scale = status[3:2];
 
 wire HSync, VSync, HBlank, VBlank, clk_sel;
-wire [3:0] r,g,b;
+wire [3:0] red_vid,green_vid,blue_vid;
 
 assign CLK_VIDEO = clk_sys;
 video_mixer #(640, 1, 1) mixer
 (
-	.ce_pix(ce_vid),
+	// .ce_pix(clock_48 & ce_pix),
+	 .ce_pix(ce_pix),
 	.freeze_sync(),
 	
 	.*,
@@ -619,9 +628,9 @@ video_mixer #(640, 1, 1) mixer
 	.hq2x(scale == 1),
 	.scandoubler(scale || forced_scandoubler),
 
-	.R(4'd3),
-	.G({4{g[0]}}),
-	.B({4{b[0]}})
+	.R(red_vid),
+	.G(green_vid),
+	.B(blue_vid)
 );
 
 assign VGA_F1 = 0;

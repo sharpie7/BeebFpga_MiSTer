@@ -70,6 +70,8 @@ port (
     -- Display interface
     VSYNC       :   out std_logic;
     HSYNC       :   out std_logic;
+	 VBLANK	    :	  out	std_logic;
+	 HBLANK	    :	  out	std_logic;
     DE          :   out std_logic;
     CURSOR      :   out std_logic;
     LPSTB       :   in  std_logic;
@@ -147,12 +149,17 @@ signal cursor0          :   std_logic;
 signal cursor1          :   std_logic;
 signal cursor2          :   std_logic;
 
+signal hblank0			:	std_logic;
+signal hblank1			:	std_logic;
+signal hblank2			:	std_logic;
+
 
 begin
     HSYNC <= hs; -- External HSYNC driven directly from internal signal
     VSYNC <= vs; -- External VSYNC driven directly from internal signal
 
     de0 <= '1' when h_display = '1' and v_display = '1' and r08_interlace(5 downto 4) /= "11" else '0';
+	 hblank0 <= h_display;
 
     -- In Mode 7 DE Delay is set to 01, but in our implementation no delay is needed
     -- TODO: Fix SAA5050
@@ -160,6 +167,13 @@ begin
           de0 when r08_interlace(5 downto 4) = "01" else -- not accurate, should be de1
           de2 when r08_interlace(5 downto 4) = "10" else
           '0';
+			 
+	 HBLANK <= not hblank0 when r08_interlace(5 downto 4) = "00" else
+		  not hblank0 when r08_interlace(5 downto 4) = "01" else
+		  not hblank2 when r08_interlace(5 downto 4) = "10" else
+		  '1';
+		  
+	 VBLANK <= not v_display;
 
     -- Cursor output generated combinatorially from the internal signal in
     -- accordance with the currently selected cursor mode
@@ -611,6 +625,8 @@ begin
                 de2     <= de1;
                 cursor1 <= cursor0;
                 cursor2 <= cursor1;
+					 hblank1 <= hblank0;
+				    hblank2 <= hblank1;
             end if;
         end if;
     end process;
