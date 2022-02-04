@@ -183,13 +183,14 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 assign HDMI_FREEZE = 0;
 
-assign SDRAM_A[0] = 'Z;
-assign SDRAM_A[1] = 'Z;
-assign SDRAM_A[2] = 'Z;
-assign SDRAM_A[3] = 'Z;
-assign SDRAM_A[4] = 'Z;
-assign SDRAM_A[5] = 'Z;
-assign SDRAM_A[6] = HBlank;
+assign SDRAM_DQ[15:8] = 'Z;	
+assign SDRAM_A[0] = sdmiso; // brown
+assign SDRAM_A[1] = sdss;   // red
+assign SDRAM_A[2] = sdclk;  // orange
+assign SDRAM_A[3] = sdmosi;
+assign SDRAM_A[4] = img_mounted;
+assign SDRAM_A[5] = |img_size;
+assign SDRAM_A[6] = vsd_sel;
 assign SDRAM_A[7] = VBlank;
 assign SDRAM_A[8] = clk_sel;
 assign SDRAM_A[9] = ce_pix;
@@ -214,7 +215,7 @@ video_freak video_freak
 parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
-	"S,VHD;",
+	"S0,VHD;",
 	"OC,Autostart,Yes,No;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
@@ -285,9 +286,9 @@ wire [31:0] sd_lba[1];
 wire        sd_rd;
 wire        sd_wr;
 wire        sd_ack;
-wire  [7:0] sd_buff_addr;
-wire [15:0] sd_buff_dout;
-wire [15:0] sd_buff_din[1];
+wire  [12:0] sd_buff_addr;
+wire [7:0] sd_buff_dout;
+wire [7:0] sd_buff_din[1];
 wire        sd_buff_wr;
 wire        img_mounted;
 wire        img_readonly;
@@ -297,7 +298,7 @@ wire        sd_ack_conf;
 wire [64:0] RTC;
 
 // hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
-hps_io #(.CONF_STR(CONF_STR), .WIDE(1)) hps_io
+hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c244
 
 
 (
@@ -405,7 +406,7 @@ always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
 	case({m128, mem_addr[17:14]})
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
-		'b0_10_00: rom_addr[17:14] =  0; //bbcb/swmmfs.rom         *** IES DISABLED
+		'b0_10_00: rom_addr[17:14] =  1; //bbcb/swmmfs.rom
 		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom       
 		'b1_00_10: rom_addr[17:14] =  4; //m128/adfs1-57.rom     
@@ -553,7 +554,7 @@ bbc_micro_core BBCMicro
 	.avr_RxD(),
 	.avr_TxD(),
 
-	.cpu_addr(SDRAM_DQ),
+	.cpu_addr(), // IES: Debugging
 	.m128_mode(m128),
 	.copro_mode(|status[6:5]),
 	
@@ -571,7 +572,7 @@ bbc_micro_core BBCMicro
 	.ext_tube_a(),
 	.ext_tube_di(),
 	.ext_tube_do(),
-	.test()
+	.test(SDRAM_DQ[7:0])
 );
 
 wire [7:0] audio_sn;
@@ -647,9 +648,10 @@ reg vsd_sel = 0;
 always @(posedge clk_sys) if(img_mounted) vsd_sel <= |img_size;
 
 wire vsdmiso;
-sd_card #(1) sd_card
+sd_card #(.WIDE(0)) sd_card // IES Updated from c244
 (
 	.*,
+	.sd_buff_addr(sd_buff_addr[8:0]),
 	.sd_lba(sd_lba[0]),
 	.sd_buff_din(sd_buff_din[0]),
 	.clk_spi(clk_sys),

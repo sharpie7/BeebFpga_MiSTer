@@ -818,7 +818,7 @@ begin
         clock_48
         );
 
-    -- User VIA
+    --  VIA
     user_via : entity work.m6522 port map (
         cpu_a(3 downto 0),
         cpu_do,
@@ -2225,7 +2225,21 @@ begin
     -- Debugging output
     cpu_addr <= cpu_a(15 downto 0);
 
+	 
+	     -- SDCLK is driven from either PB1 or CB1 depending on the SR Mode
+--    sdclk_int     <= user_via_pb_out(1) when user_via_pb_oe_n(1) = '0' else
+--                     user_via_cb1_out   when user_via_cb1_oe_n = '0' else
+--                     '1';
+--
+--    SDCLK           <= sdclk_int;
+--    user_via_cb1_in <= sdclk_int;
+
+    -- SDMOSI is always driven from PB0
+--    SDMOSI        <= user_via_pb_out(0) when user_via_pb_oe_n(0) = '0' else
+--                     '1';
+
     -- Test output
-    test <= "0000" & hard_reset_n & keyb_break & sys_via_enable & crtc_enable;
+    test <= user_via_pb_oe_n(0) & user_via_pb_out(0) & user_via_pb_out(1) & user_via_pb_oe_n(1) 
+	       & user_via_cb1_oe_n & user_via_cb1_out & sdclk_int & user_via_enable;
 
 end architecture;
