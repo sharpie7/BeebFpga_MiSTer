@@ -71,17 +71,18 @@ use ieee.numeric_std.all;
 
 entity bbc_micro_core is
     generic (
-        IncludeAMXMouse    : boolean := false;
-        IncludeSID         : boolean := false; -- IES New
-        IncludeMusic5000   : boolean := false; -- IES New
-        IncludeICEDebugger : boolean := false; -- IES New
+        IncludeAMXMouse    : boolean := false; -- Not tested in this project
+        IncludeSID         : boolean := false; -- Not tested in this project
+        IncludeMusic5000   : boolean := false; -- Not tested in this project
+        IncludeICEDebugger : boolean := false; -- Not tested in this project
         IncludeCoPro6502   : boolean := false; -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
-        IncludeVideoNuLA   : boolean := false; -- IES New
-        UseOrigKeyboard    : boolean := false; -- IES New
-        UseT65Core         : boolean := false; -- IES New
-        UseAlanDCore       : boolean := true;  -- IES New
+        IncludeVideoNuLA   : boolean := false; -- Not tested in this project
+        UseOrigKeyboard    : boolean := false; -- Not tested in this project
+        UseT65Core         : boolean := false; -- Classic 6502. Seems to crash Quartus in this project
+        UseAlanDCore       : boolean := true;  -- 65C02 - Normal default
+		UsePeterWCore	   : boolean := false; -- Classic 6502
         OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip; IES New
     );
     port (
@@ -662,6 +663,7 @@ begin
             cpu_di,
             cpu_do
         );
+		cpu_nr_w <= not cpu_r_nw;
         avr_TxD <= avr_RxD;
     end generate;
 
@@ -681,6 +683,38 @@ begin
             sync_irq => open,
             Regs     => open
         );
+		cpu_nr_w <= not cpu_r_nw;
+        cpu_do <= std_logic_vector(cpu_dout_us);
+        cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
+        cpu_a(23 downto 16) <= (others => '0');
+        avr_TxD <= avr_RxD;
+    end generate;
+	
+	GenPeterWCore: if UsePeterWCore and not IncludeICEDebugger generate
+        core : entity work.cpu65xx
+		generic map (
+			pipelineOpcode => false,
+		pipelineAluMux  => false,
+		pipelineAluOut  => false
+		)
+        port map (
+            reset    => reset_n,
+            clk      => clock_48,
+            enable   => cpu_clken,
+            nmi_n    => cpu_nmi_n,
+            irq_n    => cpu_irq_n,
+            di       => unsigned(cpu_di),
+            do       => cpu_dout_us,
+            addr     => cpu_addr_us,
+            we      => cpu_nr_w,
+            debugOpcode => open,
+            debugPc     => open,
+			debugA      => open,
+			debugX      => open,
+			debugY      => open,
+			debugS      => open
+        );
+		cpu_r_nw <= not cpu_nr_w;
         cpu_do <= std_logic_vector(cpu_dout_us);
         cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
         cpu_a(23 downto 16) <= (others => '0');
@@ -745,13 +779,13 @@ begin
             port map (
                 CLOCK           => clock_48,
                 CLKEN           => vid_clken,
-                nRESET          => hard_reset_n, -- To Add clk_sel, crtc_cepix
-					 CE_PIX          => crtc_cepix,
+                nRESET          => hard_reset_n,
+				CE_PIX          => crtc_cepix,
                 CLKEN_CRTC      => crtc_clken,
                 CLKEN_CRTC_ADR  => crtc_clken_adr,
                 CLKEN_COUNT     => clken_counter,
                 TTXT            => ttxt_active,
-                VGA             => vga_mode,
+                VGA             => vga_mode, -- In
                 ENABLE          => vidproc_enable,
                 A0              => cpu_a(0),
                 DI_CPU          => cpu_do,
@@ -773,7 +807,7 @@ begin
         clock_48, -- This runs at 12 MHz, which we can't derive from the 32 MHz clock
         ttxt_clken,
         hard_reset_n,
-        vga_mode,
+        vga_mode, -- In
         clock_48, -- Data input is synchronised from the bus clock domain
         vid_clken,
         vid_mem_data(6 downto 0),
@@ -926,7 +960,8 @@ begin
            middle   => mouse_via_pb_in(6),
            right    => mouse_via_pb_in(7)
         );
-        mouse_via_pa_in <= mouse_via_pa_out;
+		-- Make unused inputs float high
+        mouse_via_pa_in <= (others => '1');
         mouse_via_pb_in(4) <= '1';
         mouse_via_pb_in(3) <= '1';
         mouse_via_pb_in(1) <= '1';
@@ -1485,7 +1520,7 @@ begin
     cpu_abort_n <= '1';
     cpu_nmi_n <= '1';
     cpu_so_n <= '1';
-    cpu_nr_w <= not cpu_r_nw;
+    -- cpu_nr_w <= not cpu_r_nw;
 
     -- Address decoding
     -- 0x0000 = 32 KB SRAM
@@ -1930,8 +1965,9 @@ begin
     -- SDSS is hardwired to 0 (always selected) as there is only one slave attached
     SDSS          <= '0';
 
-    user_via_pa_in <= user_via_pa_out;
-    user_via_pb_in <= user_via_pb_out;
+    -- Make unused inputs float high
+    user_via_pa_in <= (others => '1');
+    user_via_pb_in <= (others => '1');
 
     -- ROM select latch
     process(clock_48,reset_n)
@@ -2152,7 +2188,8 @@ begin
     video_blue  <= (others => b_out(0));
     video_cepix <= crtc_cepix when ttxt_active = '0' else ttxt_clken;
     video_sel   <= not ttxt_active;
-	 video_hblank<= crtc_hblank when ttxt_active = '0' else ttxt_hblank;
+	video_hblank<= crtc_hblank when ttxt_active = '0' else ttxt_hblank;
+	vga_mode <= ttxt_active;
 	
 
 -----------------------------------------------

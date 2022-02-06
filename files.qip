@@ -47,3 +47,6 @@ set_global_assignment -name VERILOG_FILE rtl/Tube/ph_flag_m.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/ph_reg3.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/tube.v
 set_global_assignment -name VHDL_FILE rtl/Tube/tube_comp_pack.vhd
+set_global_assignment -name VHDL_FILE rtl/PeterW/cpu65xx_e.vhd
+set_global_assignment -name VHDL_FILE rtl/PeterW/cpu65xx_fast.vhd
+
