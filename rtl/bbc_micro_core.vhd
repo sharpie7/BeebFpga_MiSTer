@@ -80,8 +80,8 @@ entity bbc_micro_core is
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project
         UseOrigKeyboard    : boolean := false; -- Not tested in this project
-        UseT65Core         : boolean := false; -- Classic 6502. Seems to crash Quartus in this project
-        UseAlanDCore       : boolean := true;  -- 65C02 - Normal default
+        UseT65Core         : boolean := true; -- Classic 6502. Seems to crash Quartus in this project
+        UseAlanDCore       : boolean := false;  -- 65C02 - Normal default
 		UsePeterWCore	   : boolean := false; -- Classic 6502
         OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip; IES New
     );

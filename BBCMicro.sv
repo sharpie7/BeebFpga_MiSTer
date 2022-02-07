@@ -172,8 +172,8 @@ module emu
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
-//assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
-assign {SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+//assign {SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = 0;
  
 assign LED_USER  = ioctl_download | (vsd_sel & sd_act);
@@ -183,20 +183,20 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 assign HDMI_FREEZE = 0;
 
-assign SDRAM_DQ[15:8] = 'Z;	
-assign SDRAM_A[0] = sdmiso; // brown
-assign SDRAM_A[1] = sdss;   // red
-assign SDRAM_A[2] = sdclk;  // orange
-assign SDRAM_A[3] = sdmosi;
-assign SDRAM_A[4] = img_mounted;
-assign SDRAM_A[5] = |img_size;
-assign SDRAM_A[6] = vsd_sel;
-assign SDRAM_A[7] = VBlank;
-assign SDRAM_A[8] = clk_sel;
-assign SDRAM_A[9] = ce_pix;
-assign SDRAM_A[10] = HSync;
-assign SDRAM_A[11] = VSync;
-assign SDRAM_A[12] = CLK_VIDEO;
+// assign SDRAM_DQ[15:8] = 'Z;	
+// assign SDRAM_A[0] = sdmiso; // brown
+// assign SDRAM_A[1] = sdss;   // red
+// assign SDRAM_A[2] = sdclk;  // orange
+// assign SDRAM_A[3] = sdmosi;
+// assign SDRAM_A[4] = img_mounted;
+// assign SDRAM_A[5] = |img_size;
+// assign SDRAM_A[6] = vsd_sel;
+// assign SDRAM_A[7] = VBlank;
+// assign SDRAM_A[8] = clk_sel;
+// assign SDRAM_A[9] = ce_pix;
+// assign SDRAM_A[10] = HSync;
+// assign SDRAM_A[11] = VSync;
+// assign SDRAM_A[12] = CLK_VIDEO;
 
 wire [1:0] ar = status[14:13];
 video_freak video_freak
@@ -547,8 +547,8 @@ bbc_micro_core BBCMicro
 	
 	.ps2config(),
 
-   .joystick1(),
-	.joystick2(),
+   .joystick1(5'b11111),
+	.joystick2(5'b11111),
 	
 	.avr_reset(),
 	.avr_RxD(),
@@ -572,7 +572,7 @@ bbc_micro_core BBCMicro
 	.ext_tube_a(),
 	.ext_tube_di(),
 	.ext_tube_do(),
-	.test(SDRAM_DQ[7:0])
+	.test()
 );
 
 wire [7:0] audio_sn;
