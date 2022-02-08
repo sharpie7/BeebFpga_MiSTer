@@ -310,6 +310,12 @@ signal cpu_di           :   std_logic_vector(7 downto 0);
 signal cpu_do           :   std_logic_vector(7 downto 0);
 signal cpu_addr_us      :   unsigned (15 downto 0);
 signal cpu_dout_us      :   unsigned (7 downto 0);
+signal cpu_a_t65        :   std_logic_vector(23 downto 0);
+signal cpu_do_t65       :   std_logic_vector(7 downto 0);
+signal cpu_r_nw_t65     :   std_logic;
+signal cpu_sync_t65     :   std_logic;
+signal cpu_r_nw_c02     :   std_logic;
+signal cpu_sync_c02     :   std_logic;
 
 -- CRTC signals
 signal crtc_clken       :   std_logic;
@@ -635,11 +641,11 @@ begin
 --
 --    end generate;
 
-    GenT65Core: if UseT65Core and not IncludeICEDebugger generate
+    GenT65Core: if not IncludeICEDebugger generate
         core : entity work.T65
         port map (
             cpu_mode,
-            reset_n,
+            not m128_mode and reset_n,
             cpu_clken,
             clock_48,
             cpu_ready,
@@ -647,8 +653,8 @@ begin
             cpu_irq_n,
             cpu_nmi_n,
             cpu_so_n,
-            cpu_r_nw,
-            cpu_sync,
+            cpu_r_nw_t65,
+            cpu_sync_t65,
             cpu_ef,
             cpu_mf,
             cpu_xf,
@@ -656,17 +662,17 @@ begin
             cpu_vp_n,
             cpu_vda,
             cpu_vpa,
-            cpu_a,
+            cpu_a_t65,
             cpu_di,
-            cpu_do
+            cpu_do_t65
         );
         avr_TxD <= avr_RxD;
     end generate;
 
-    GenAlanDCore: if UseAlanDCore and not IncludeICEDebugger generate
+    GenAlanDCore: if not IncludeICEDebugger generate
         core : entity work.r65c02
         port map (
-            reset    => reset_n,
+            reset    => m128_mode and reset_n,
             clk      => clock_48,
             enable   => cpu_clken,
             nmi_n    => cpu_nmi_n,
@@ -674,16 +680,31 @@ begin
             di       => unsigned(cpu_di),
             do       => cpu_dout_us,
             addr     => cpu_addr_us,
-            nwe      => cpu_r_nw,
-            sync     => cpu_sync,
+            nwe      => cpu_r_nw_c02,
+            sync     => cpu_sync_c02,
             sync_irq => open,
             Regs     => open
         );
-        cpu_do <= std_logic_vector(cpu_dout_us);
-        cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
-        cpu_a(23 downto 16) <= (others => '0');
         avr_TxD <= avr_RxD;
     end generate;
+	
+	process(m128_mode, 
+	        cpu_dout_us, cpu_addr_us, cpu_r_nw_c02, cpu_sync_c02,
+	        cpu_do_t65 , cpu_a_t65  , cpu_r_nw_t65, cpu_sync_t65 ) -- Swap active buses between CPUs depending on the m128_mode
+    begin
+		if m128_mode = '1' then
+			cpu_do <= std_logic_vector(cpu_dout_us);
+			cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
+			cpu_a(23 downto 16) <= (others => '0');
+			cpu_r_nw <= cpu_r_nw_c02;
+			cpu_sync <= cpu_sync_c02;
+		else
+			cpu_do <= cpu_do_t65;
+			cpu_a <= cpu_a_t65;
+			cpu_r_nw <= cpu_r_nw_t65;
+			cpu_sync <= cpu_sync_t65;
+		end if;
+    end process;
 	
 
     crtc : entity work.mc6845 port map (
