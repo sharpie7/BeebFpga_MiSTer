@@ -80,9 +80,6 @@ entity bbc_micro_core is
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project
         UseOrigKeyboard    : boolean := false; -- Not tested in this project
-        UseT65Core         : boolean := true; -- Classic 6502. Seems to crash Quartus in this project
-        UseAlanDCore       : boolean := false;  -- 65C02 - Normal default
-		UsePeterWCore	   : boolean := false; -- Classic 6502
         OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip; IES New
     );
     port (
@@ -663,7 +660,6 @@ begin
             cpu_di,
             cpu_do
         );
-		cpu_nr_w <= not cpu_r_nw;
         avr_TxD <= avr_RxD;
     end generate;
 
@@ -683,43 +679,12 @@ begin
             sync_irq => open,
             Regs     => open
         );
-		cpu_nr_w <= not cpu_r_nw;
         cpu_do <= std_logic_vector(cpu_dout_us);
         cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
         cpu_a(23 downto 16) <= (others => '0');
         avr_TxD <= avr_RxD;
     end generate;
 	
-	GenPeterWCore: if UsePeterWCore and not IncludeICEDebugger generate
-        core : entity work.cpu65xx
-		generic map (
-			pipelineOpcode => false,
-		pipelineAluMux  => false,
-		pipelineAluOut  => false
-		)
-        port map (
-            reset    => reset_n,
-            clk      => clock_48,
-            enable   => cpu_clken,
-            nmi_n    => cpu_nmi_n,
-            irq_n    => cpu_irq_n,
-            di       => unsigned(cpu_di),
-            do       => cpu_dout_us,
-            addr     => cpu_addr_us,
-            we      => cpu_nr_w,
-            debugOpcode => open,
-            debugPc     => open,
-			debugA      => open,
-			debugX      => open,
-			debugY      => open,
-			debugS      => open
-        );
-		cpu_r_nw <= not cpu_nr_w;
-        cpu_do <= std_logic_vector(cpu_dout_us);
-        cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
-        cpu_a(23 downto 16) <= (others => '0');
-        avr_TxD <= avr_RxD;
-    end generate;
 
     crtc : entity work.mc6845 port map (
         clock_48,
@@ -1520,7 +1485,7 @@ begin
     cpu_abort_n <= '1';
     cpu_nmi_n <= '1';
     cpu_so_n <= '1';
-    -- cpu_nr_w <= not cpu_r_nw;
+    cpu_nr_w <= not cpu_r_nw;
 
     -- Address decoding
     -- 0x0000 = 32 KB SRAM
