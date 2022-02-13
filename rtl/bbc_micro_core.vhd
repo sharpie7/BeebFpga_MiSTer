@@ -73,7 +73,7 @@ entity bbc_micro_core is
     generic (
         IncludeAMXMouse    : boolean := false; -- Not tested in this project
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := false; -- Not tested in this project
+        IncludeMusic5000   : boolean := true; -- Not tested in this project
         IncludeICEDebugger : boolean := false; -- Not tested in this project
         IncludeCoPro6502   : boolean := true;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
@@ -329,7 +329,7 @@ signal crtc_hsync       :   std_logic;
 signal crtc_hsync_n     :   std_logic;
 signal crtc_de          :   std_logic;
 signal crtc_cursor      :   std_logic;
-constant crtc_lpstb     :   std_logic := '0';
+signal crtc_lpstb       :   std_logic;
 signal crtc_ma          :   std_logic_vector(13 downto 0);
 signal crtc_ra          :   std_logic_vector(4 downto 0);
 signal crtc_hblank      :   std_logic;
@@ -1690,6 +1690,7 @@ begin
 
     -- CPU data bus mux and interrupts
     cpu_di <=
+	     cpu_do         when cpu_r_nw = '0' else -- Loopback required by T65 for illegal opcodes
         cpu_mem_data   when ram_enable = '1' or rom_enable = '1' or mos_enable = '1' else
         crtc_do        when crtc_enable = '1' else
         adc_do         when adc_enable = '1' else
@@ -1911,6 +1912,10 @@ begin
     -- CRTC
     sys_via_ca1_in <= crtc_vsync;
     sys_via_cb2_in <= crtc_lpstb;
+	 -- The Lightpen strobe is abused by Pharoah's Curse
+    -- see https://github.com/mattgodbolt/jsbeeb/issues/135
+    crtc_lpstb <= sys_via_cb2_out when sys_via_cb2_oe_n = '0' else '1';
+	 
     -- Keyboard
     sys_via_ca2_in <= keyb_int;
 

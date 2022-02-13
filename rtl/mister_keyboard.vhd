@@ -77,12 +77,16 @@ architecture rtl of misterkeyboard is
 signal keyb_data	:	std_logic_vector(7 downto 0);
 signal keyb_valid	:	std_logic;
 signal flg			:	std_logic;
+signal ext_key    :  std_logic;
 
 -- Internal signals
 type key_matrix is array(0 to 15) of std_logic_vector(7 downto 0);
 signal keys			:	key_matrix;
 signal col			:	unsigned(3 downto 0);
 signal press		:	std_logic;
+
+
+
 begin
 
 	-- Column counts automatically when AUTOSCAN is enabled, otherwise
@@ -124,6 +128,7 @@ begin
 	end process;
 	
 	keyb_data <= MISTER_KEY(7 downto 0);
+	ext_key <= MISTER_KEY(8);
 	press <= MISTER_KEY(9);
 	keyb_valid <= '1' when flg /= MISTER_KEY(10) else '0';
 	process(CLOCK) begin
@@ -187,7 +192,8 @@ begin
 				when X"09" => keys(0)(2) <= press; -- F10 (F0)
 				when X"16" => keys(0)(3) <= press; -- 1
 				when X"58" => keys(0)(4) <= press; -- CAPS LOCK
-				when X"11" => keys(0)(5) <= press; -- LEFT ALT (SHIFT LOCK)
+				when X"11" => keys(0)(5) <= (not ext_key) and press; -- LEFT ALT (SHIFT LOCK)
+								  keys(0)(4) <= ext_key and press; -- R ALT doubles as capslock
 				when X"0D" => keys(0)(6) <= press; -- TAB
 				when X"76" => keys(0)(7) <= press; -- ESCAPE
 				when X"14" => keys(1)(0) <= press; -- LEFT/RIGHT CTRL (CTRL)
@@ -253,12 +259,16 @@ begin
 				when X"5A" => keys(9)(4) <= press; -- RETURN
 				when X"66" => keys(9)(5) <= press; -- BACKSPACE (DELETE)
 				when X"69" => keys(9)(6) <= press; -- END (COPY)
+				when x"2F" => keys(0)(4) <= ext_key and press; -- MENUS doubles as capslock
+				when x"71" => keys(9)(6) <= ext_key and press; -- DELETE key doubles as copy
 				when X"74" => keys(9)(7) <= press; -- RIGHT
 				
 				-- CTRL+F11 is used for the BREAK key, which in the real BBC asserts
 				-- reset.  Here we pass this out to the top level which may
 				-- optionally OR it in to the system reset
-				when X"78" => BREAK_OUT <= keys(1)(0) and press; -- CTRL+F11 (BREAK)
+				-- when X"78" => BREAK_OUT <= keys(1)(0) and press; -- CTRL+F11 (BREAK)
+				-- F11 for BREAK (no control key is my preferred solution)
+				when X"78" => BREAK_OUT <= press; -- CTRL+F11 (BREAK)
 
 				when others => null;
 				end case;
