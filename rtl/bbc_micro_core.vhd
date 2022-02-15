@@ -71,7 +71,7 @@ use ieee.numeric_std.all;
 
 entity bbc_micro_core is
     generic (
-        IncludeAMXMouse    : boolean := false; -- Not tested in this project
+        IncludeAMXMouse    : boolean := true;
         IncludeSID         : boolean := false; -- Not tested in this project
         IncludeMusic5000   : boolean := false; -- Not tested in this project
         IncludeICEDebugger : boolean := false; -- Not tested in this project
@@ -103,9 +103,9 @@ entity bbc_micro_core is
 		mister_key       : in std_logic_vector (10 downto 0);
 
         -- Mouse
-        ps2_mse_clk    : inout std_logic;
-        ps2_mse_data   : inout std_logic;
-		-- IES MISTer ps2_mouse      : in  std_logic_vector (24 downto 0);
+ --       ps2_mse_clk    : inout std_logic;
+ --       ps2_mse_data   : inout std_logic;
+		mister_mouse      : in  std_logic_vector (24 downto 0);
 
         -- Control input to exchange Keyboard and Mouse connections
 --        ps2_swap       : in    std_logic := '0'; -- IES New
@@ -493,14 +493,14 @@ signal ps2_keyb_busy    :   std_logic;
 signal ps2_keyb_write   :   std_logic;
 
 -- Seperate (i.e. non open collector) keyboard and mouse signals
-signal ps2_kbd_clk_in   :   std_logic;
-signal ps2_kbd_clk_out  :   std_logic;
-signal ps2_kbd_data_in  :   std_logic;
-signal ps2_kbd_data_out :   std_logic;
-signal ps2_mse_clk_in   :   std_logic;
-signal ps2_mse_clk_out  :   std_logic;
-signal ps2_mse_data_in  :   std_logic;
-signal ps2_mse_data_out :   std_logic;
+-- signal ps2_kbd_clk_in   :   std_logic;
+-- signal ps2_kbd_clk_out  :   std_logic;
+-- signal ps2_kbd_data_in  :   std_logic;
+-- signal ps2_kbd_data_out :   std_logic;
+-- signal ps2_mse_clk_in   :   std_logic;
+-- signal ps2_mse_clk_out  :   std_logic;
+-- signal ps2_mse_data_in  :   std_logic;
+-- signal ps2_mse_data_out :   std_logic;
 
 -- Sound generator
 signal sound_ready      :   std_logic;
@@ -904,24 +904,24 @@ begin
             mhz4_clken,
             clock_48
         );
-        mouse_ps2interface: entity work.ps2interface
-        generic map(
-            MainClockSpeed => 48000000
-        )
-        port map(
-           ps2_clk      => ps2_mse_clk_in,
-           ps2_clk_out  => ps2_mse_clk_out,
-           ps2_data     => ps2_mse_data_in,
-           ps2_data_out => ps2_mse_data_out,
-           clk          => clock_48,
-           rst          => reset,
-           tx_data      => mouse_tx_data,
-           write        => mouse_write,
-           rx_data      => mouse_rx_data,
-           read         => mouse_read,
-           busy         => open,
-           err          => mouse_err
-        );
+        -- mouse_ps2interface: entity work.ps2interface
+        -- generic map(
+            -- MainClockSpeed => 48000000
+        -- )
+        -- port map(
+           -- ps2_clk      => ps2_mse_clk_in,
+           -- ps2_clk_out  => ps2_mse_clk_out,
+           -- ps2_data     => ps2_mse_data_in,
+           -- ps2_data_out => ps2_mse_data_out,
+           -- clk          => clock_48,
+           -- rst          => reset,
+           -- tx_data      => mouse_tx_data,
+           -- write        => mouse_write,
+           -- rx_data      => mouse_rx_data,
+           -- read         => mouse_read,
+           -- busy         => open,
+           -- err          => mouse_err
+        -- );
         -- BBC Micro User Port (Mouse use)
         --  2 - CB1 - X Axis
         --  6 - D0  - X Dir
@@ -933,11 +933,7 @@ begin
         mouse_controller: entity work.quadrature_controller port map(
            clk      => clock_48,
            rst      => reset,
-           read     => mouse_read,
-           err      => mouse_err,
-           rx_data  => mouse_rx_data,
-           write    => mouse_write,
-           tx_data  => mouse_tx_data,
+           ps2_mouse=> mister_mouse,
            x_a      => mouse_via_cb1_in,
            x_b      => mouse_via_pb_in(0),
            y_a      => mouse_via_cb2_in,
@@ -955,8 +951,8 @@ begin
     GenNotMouse: if not IncludeAMXMouse generate
         mouse_via_do     <= x"FE";
         mouse_via_irq_n  <= '1';
-        ps2_mse_clk_out  <= '1';
-        ps2_mse_data_out <= '1';
+--        ps2_mse_clk_out  <= '1';
+--       ps2_mse_data_out <= '1';
     end generate;
 
 

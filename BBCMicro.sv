@@ -499,7 +499,7 @@ bbc_micro_core BBCMicro
     .ps2_mse_data(),
 
 	 .mister_key(ps2_key),
-	// .ps2_mouse(status[10] ? ps2_mouse : 25'd0),
+	 .mister_mouse(status[10] ? ps2_mouse : 25'd0),
 
 	.video_sel(clk_sel),
 	.video_cepix(ce_pix),

@@ -3,11 +3,9 @@ set_global_assignment -name SYSTEMVERILOG_FILE BBCMicro.sv
 set_global_assignment -name VHDL_FILE rtl/bbc_micro_core.vhd -hdl_version VHDL_2008
 set_global_assignment -name VHDL_FILE rtl/CoPro6502.vhd
 set_global_assignment -name VHDL_FILE rtl/CoProSPI.vhd
-set_global_assignment -name VHDL_FILE rtl/keyboard.vhd
 set_global_assignment -name VHDL_FILE rtl/mister_keyboard.vhd
 set_global_assignment -name VHDL_FILE rtl/m6522.vhd
 set_global_assignment -name VHDL_FILE rtl/mc6845.vhd
-set_global_assignment -name VHDL_FILE rtl/ps2_intf.vhd
 set_global_assignment -name VHDL_FILE rtl/rtc.vhd
 set_global_assignment -name VHDL_FILE rtl/saa5050.vhd
 set_global_assignment -name VHDL_FILE rtl/saa5050_rom_dual_port.vhd
@@ -17,8 +15,7 @@ set_global_assignment -name VHDL_FILE rtl/upd7002.vhd
 set_global_assignment -name VHDL_FILE rtl/vidproc.vhd
 set_global_assignment -name VHDL_FILE rtl/vidproc_orig.vhd
 set_global_assignment -name VHDL_FILE rtl/AlanD/R65Cx2.vhd
-set_global_assignment -name VHDL_FILE rtl/mouse/ps2interface.vhd
-set_global_assignment -name VHDL_FILE rtl/mouse/quadrature_controller.vhd
+set_global_assignment -name VHDL_FILE rtl/mouse/mister_quadrature_controller.vhd
 set_global_assignment -name VHDL_FILE rtl/mouse/quadrature_fsm.vhd
 set_global_assignment -name VHDL_FILE rtl/music5000/LogLinRom.vhd
 set_global_assignment -name VHDL_FILE rtl/music5000/Music5000.vhd
