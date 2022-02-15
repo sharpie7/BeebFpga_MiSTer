@@ -327,7 +327,6 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c24
 	.sd_rd(sd_rd),
 	.sd_wr(sd_wr),
 	.sd_ack(sd_ack),
-//	.sd_ack_conf(sd_ack_conf),
 	.sd_buff_addr(sd_buff_addr),
 	.sd_buff_dout(sd_buff_dout),
 	.sd_buff_din(sd_buff_din),
@@ -337,9 +336,9 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c24
 	.img_size(img_size),
 
 	.joystick_0(joy1),
-	.joystick_1(joy2)//,
-//	.joystick_analog_0({joy1_y,joy1_x}),
-//	.joystick_analog_1({joy2_y,joy2_x})
+	.joystick_1(joy2),
+	.joystick_l_analog_0({joy1_y,joy1_x}),
+	.joystick_l_analog_1({joy2_y,joy2_x})
 );
 
 /////////////////  RESET  /////////////////////////
@@ -483,8 +482,6 @@ wire [7:0] joyb_x = 8'hFF - {~joy2_x[7],joy2_x[6:0]};
 wire [7:0] joyb_y = 8'hFF - {~joy2_y[7],joy2_y[6:0]};
 
 
-// ### added
-//wire [1:0] ce_rate;
 wire       ce_pix;
 
 bbc_micro_core BBCMicro
@@ -547,8 +544,13 @@ bbc_micro_core BBCMicro
 	
 	.ps2config(),
 
-   .joystick1(5'b11111),
-	.joystick2(5'b11111),
+	.joystick1_x(    status[11] ? {joyb_x,joyb_x[7:4]} : {joya_x,joya_x[7:4]}),
+	.joystick1_y(    status[11] ? {joyb_y,joyb_y[7:4]} : {joya_y,joya_y[7:4]}),
+	.joystick1_fire( status[11] ? ~joy2[4] : ~af),
+
+	.joystick2_x(   ~status[11] ? {joya_x,joya_x[7:4]} : {joyb_x,joyb_x[7:4]}),
+	.joystick2_y(   ~status[11] ? {joya_y,joya_y[7:4]} : {joyb_y,joyb_y[7:4]}),
+	.joystick2_fire(~status[11] ? ~joy2[4] : ~af),
 	
 	.avr_reset(),
 	.avr_RxD(),

@@ -181,13 +181,13 @@ entity bbc_micro_core is
         -- aspect_wide    : out   std_logic; -- IES New
 
         -- Main Joystick and Secondary Joystick
-        -- Bit 0 - Up (active low)
-        -- Bit 1 - Down (active low)
-        -- Bit 2 - Left (active low)
-        -- Bit 3 - Right (active low)
-        -- Bit 4 - Fire (active low)
-        joystick1      : in    std_logic_vector(4 downto 0); -- IES MISTer different
-        joystick2      : in    std_logic_vector(4 downto 0); -- IES MISTer different
+		joystick1_x    : in  std_logic_vector(11 downto 0);
+		joystick1_y    : in  std_logic_vector(11 downto 0);
+		joystick1_fire : in  std_logic;
+
+		joystick2_x    : in  std_logic_vector(11 downto 0);
+		joystick2_y    : in  std_logic_vector(11 downto 0);
+		joystick2_fire : in  std_logic;
 
         -- ICE T65 Deubgger 57600 baud serial
         avr_reset      : in    std_logic;   -- active high; IES New
@@ -555,10 +555,6 @@ signal ext_tube_enable  :   std_logic;      -- 0xFEE0-FEFF
 signal adc_enable       :   std_logic;      -- 0xFEC0-FEDF
 signal adc_eoc_n        :   std_logic;
 signal adc_do           :   std_logic_vector(7 downto 0);
-signal adc_ch0          :   std_logic_vector(11 downto 0);
-signal adc_ch1          :   std_logic_vector(11 downto 0);
-signal adc_ch2          :   std_logic_vector(11 downto 0);
-signal adc_ch3          :   std_logic_vector(11 downto 0);
 
 -- ROM select latch
 signal romsel           :   std_logic_vector(7 downto 0);
@@ -1071,31 +1067,13 @@ begin
         di         => cpu_do,
         do         => adc_do,
         eoc_n      => adc_eoc_n,
-        ch0        => adc_ch0,
-        ch1        => adc_ch1,
-        ch2        => adc_ch2,
-        ch3        => adc_ch3
+        ch0        => joystick1_x,
+        ch1        => joystick1_y,
+        ch2        => joystick2_x,
+        ch3        => joystick2_y
     );
 
-    -- Master Joystick Left/Right (low value = right)
-    adc_ch0 <= "111111111111" when joystick1(2) = '0' else -- left
-               "000000000000" when joystick1(3) = '0' else -- right
-               "100000000000";
 
-    -- Master Joystick Up/Down (low value = down)
-    adc_ch1 <= "111111111111" when joystick1(0) = '0' else -- up
-               "000000000000" when joystick1(1) = '0' else -- down
-               "100000000000";
-
-    -- Secondary Joystick Left/Right (low value = right)
-    adc_ch2 <= "111111111111" when joystick2(2) = '0' else -- left
-               "000000000000" when joystick2(3) = '0' else -- right
-               "100000000000";
-
-    -- Secondary Joystick Up/Down (low value = down)
-    adc_ch3 <= "111111111111" when joystick2(0) = '0' else -- up
-               "000000000000" when joystick2(1) = '0' else -- down
-               "100000000000";
 
 
 --------------------------------------------------------
@@ -1902,8 +1880,8 @@ begin
     -- Connections to System VIA
     -- ADC
     sys_via_cb1_in <= adc_eoc_n;
-    sys_via_pb_in(5) <= joystick2(4);
-    sys_via_pb_in(4) <= joystick1(4);
+    sys_via_pb_in(5) <= joystick2_fire;
+    sys_via_pb_in(4) <= joystick1_fire;
 
     -- CRTC
     sys_via_ca1_in <= crtc_vsync;
