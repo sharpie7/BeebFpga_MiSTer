@@ -355,12 +355,12 @@ wire [18:0] mem_addr;
 wire  [7:0] mem_din;
 
 reg  [17:0] rom_addr;
-reg  [15:0] rom_dout;
-reg   [7:0] rom_data;
+reg  [7:0] rom_dout;
+reg  [7:0] rom_data;
 
-(* ram_init_file = "roms/rom.mif" *) reg [15:0] rom[114688];
-always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:1] : rom_addr[17:1]] <= {ioctl_dout[7:0], ioctl_dout[15:8]};
-always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:1]];
+(* ram_init_file = "roms/rom.mif" *) reg [7:0] rom[229376];
+always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:0] : rom_addr[17:0]] <= ioctl_dout;
+always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 
 
 // Beeb ROM Images
@@ -437,7 +437,7 @@ always_comb begin
 		'b1_11_00,
 		'b1_11_01,
 		'b1_11_10,
-		'b1_11_11: rom_data = rom_addr[0] ? rom_dout[7:0] : rom_dout[15:8];
+		'b1_11_11: rom_data = rom_dout;
 		  default: rom_data = 0;
 	endcase
 end
