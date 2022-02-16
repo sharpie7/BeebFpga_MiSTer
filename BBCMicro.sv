@@ -278,19 +278,19 @@ wire        ioctl_download;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
-wire [7:0] ioctl_dout;
+wire [7:0]  ioctl_dout;
 wire        forced_scandoubler;
 wire [21:0] gamma_bus;
 
-wire [31:0] sd_lba[1];
-wire        sd_rd;
-wire        sd_wr;
-wire        sd_ack;
-wire  [12:0] sd_buff_addr;
-wire [7:0] sd_buff_dout;
-wire [7:0] sd_buff_din[1];
+wire [31:0] sd_lba[3];
+wire [2:0]  sd_rd;
+wire [2:0]  sd_wr;
+wire [2:0]  sd_ack;
+wire [12:0] sd_buff_addr;
+wire [7:0]  sd_buff_dout;
+wire [7:0]  sd_buff_din[3];
 wire        sd_buff_wr;
-wire        img_mounted;
+wire [2:0]  img_mounted;
 wire        img_readonly;
 wire [63:0] img_size;
 wire        sd_ack_conf;
@@ -309,6 +309,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c24
 
 	.buttons(buttons),
 	.status(status),
+	.status_menumask(~status[4]),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 
@@ -486,6 +487,7 @@ wire       ce_pix;
 
 bbc_micro_core BBCMicro
 (
+    .clksys(clk_sys),
 	.clock_32(clk_32),
 	.clock_48(clk_48),
 
@@ -530,7 +532,7 @@ bbc_micro_core BBCMicro
 	
 	//.RTC(RTC),
 
-	.keyb_dip({4'd0, ~status[12], ~status[9:7]}),
+	.keyb_dip({3'd0, ~status[17], ~status[12], ~status[9:7]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),
@@ -560,6 +562,17 @@ bbc_micro_core BBCMicro
 	.m128_mode(m128),
 	.copro_mode(|status[6:5]),
 	
+	.img_mounted    ( img_mounted[2:1] ),
+	.img_size       ( img_size       ),
+	.sd_lba         ( fd_sd_lba      ),
+	.sd_rd          ( sd_rd[2:1]       ),
+	.sd_wr          ( sd_wr[2:1]       ),
+	.sd_ack         ( sd_ack[2:1]      ),
+	.sd_buff_addr   ( sd_buff_addr[8:0]   ),
+	.sd_dout        ( sd_buff_dout   ),
+	.sd_din         ( fd_sd_buff_din ),
+	.sd_dout_strobe ( sd_buff_wr ),
+	
 	.p_spi_ssel(),
 	.p_spi_sck(),
 	.p_spi_mosi(),
@@ -576,6 +589,21 @@ bbc_micro_core BBCMicro
 	.ext_tube_do(),
 	.test()
 );
+
+
+wire [31:0] fd_sd_lba;
+wire [7:0] fd_sd_buff_din;
+
+
+always @(posedge clk_48)
+begin
+	// ajs hack for now
+	sd_buff_din[1] <= fd_sd_buff_din;
+	sd_lba[1]      <=  fd_sd_lba;
+	sd_buff_din[2] <= fd_sd_buff_din;
+	sd_lba[2]      <=fd_sd_lba;
+
+end
 
 wire [7:0] audio_sn;
 
@@ -647,15 +675,22 @@ wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 wire sdss;
 
 reg vsd_sel = 0;
-always @(posedge clk_sys) if(img_mounted) vsd_sel <= |img_size;
+always @(posedge clk_sys) if(img_mounted[0]) vsd_sel <= |img_size;
 
 wire vsdmiso;
 sd_card #(.WIDE(0)) sd_card // IES Updated from c244
 (
 	.*,
+	
+	.img_mounted(img_mounted[0]),
 	.sd_buff_addr(sd_buff_addr[8:0]),
+	.sd_rd(sd_rd[0]),
+	.sd_wr(sd_wr[0]),
+	.sd_ack(sd_ack[0]),
+	
 	.sd_lba(sd_lba[0]),
 	.sd_buff_din(sd_buff_din[0]),
+	
 	.clk_spi(clk_sys),
 	.sdhc(1),
 	.sck(sdclk),

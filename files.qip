@@ -44,5 +44,7 @@ set_global_assignment -name VERILOG_FILE rtl/Tube/ph_flag_m.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/ph_reg3.v
 set_global_assignment -name VERILOG_FILE rtl/Tube/tube.v
 set_global_assignment -name VHDL_FILE rtl/Tube/tube_comp_pack.vhd
+set_global_assignment -name VERILOG_FILE rtl/fdc1772/fdc1772.v
+set_global_assignment -name VERILOG_FILE rtl/fdc1772/floppy.v
 
 
