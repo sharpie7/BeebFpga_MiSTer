@@ -235,7 +235,7 @@ entity bbc_micro_core is
 		sd_buff_addr   : in   std_logic_vector(8 downto 0);
 		sd_dout        : in   std_logic_vector(7 downto 0);
 		sd_din         : out  std_logic_vector(7 downto 0);
-		sd_dout_strobe : in   std_logic
+		sd_dout_strobe : in   std_logic;
 
 
 
@@ -1552,7 +1552,7 @@ begin
     cpu_mode <= "00"; -- 6502
     cpu_ready <= '1';
     cpu_abort_n <= '1';
-    cpu_nmi_n <= '1';
+    cpu_nmi_n <= not fdc_irq and  not fdc_drq;
     cpu_so_n <= '1';
     cpu_nr_w <= not cpu_r_nw;
 

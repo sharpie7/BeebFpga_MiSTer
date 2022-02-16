@@ -216,7 +216,10 @@ parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
 	"S0,VHD;",
+	"H0S1,SSDDSD;",
+	"H0S2,SSDDSD;",
 	"OC,Autostart,Yes,No;",
+	"H0OH,Dflt Boot,MMC (vhd),Floppy (SSD/DSD);",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -298,7 +301,7 @@ wire        sd_ack_conf;
 wire [64:0] RTC;
 
 // hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
-hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c244
+hps_io #(.CONF_STR(CONF_STR),.VDNUM(3),.BLKSZ(2)) hps_io // IES Updated from c244
 
 
 (
