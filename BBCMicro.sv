@@ -582,7 +582,7 @@ wire [7:0] audio_sn;
 //assign AUDIO_L = {audio_sn, 8'd0};
 //assign AUDIO_R = {audio_sn, 8'd0};
 assign AUDIO_MIX = 0;
-assign AUDIO_S = 0;
+assign AUDIO_S = 1;
 
 // ### Massive hack
 // wire ce_vids = (ce_vid & (clk_sel ? ce_32 : ce_24));

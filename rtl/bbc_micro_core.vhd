@@ -73,7 +73,7 @@ entity bbc_micro_core is
     generic (
         IncludeAMXMouse    : boolean := true;
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := false; -- Not tested in this project
+        IncludeMusic5000   : boolean := true;
         IncludeICEDebugger : boolean := false; -- Not tested in this project
         IncludeCoPro6502   : boolean := true;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
