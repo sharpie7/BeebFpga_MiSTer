@@ -211,12 +211,28 @@ video_freak video_freak
 	.SCALE(status[16:15])
 );
 
+// Configuration bits:
+// See https://github.com/MiSTer-devel/Main_MiSTer/wiki/Core-configuration-string
+// 02-03   - Scandouble settings
+// 04 ( 4) - BBC B or Master
+// 05-06   - Co processor
+// 07-09   - Default video mode
+// OA (10) - Mouse as Joystick
+// 0B (11) - Swap joysticks
+// 0C (12) - Autostart
+// 0D-0E   - Aspect ratio
+// 0F-0G   - Image scaling
+// 0H      - Reserved - MMFS or Floppy
+// 0P (25) - MMFS V1 or V2
 `include "build_id.v" 
+parameter FILE_SYS_OPT = 25;
+
 parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
-	"S0,VHD;",
+	"S0,VHDIMGMMB;", // Allow .VHD or .MMB files to be loaded (MMFSv1) or .IMG (MMFS v2)
 	"OC,Autostart,Yes,No;",
+	"OP,File System,MMFS-V1,MMFS-V2;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -358,7 +374,7 @@ reg  [17:0] rom_addr;
 reg  [7:0] rom_dout;
 reg  [7:0] rom_data;
 
-(* ram_init_file = "roms/rom.mif" *) reg [7:0] rom[229376];
+(* ram_init_file = "roms/rom.mif" *) reg [7:0] rom[16 * 16384];
 always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:0] : rom_addr[17:0]] <= ioctl_dout;
 always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 
@@ -409,11 +425,25 @@ always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
 	case({m128, mem_addr[17:14]})
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
-		'b0_10_00: rom_addr[17:14] =  1; //bbcb/swmmfs.rom - Must be in slot 8 because of split RAM/ROM in that slot
+		'b0_10_00: begin
+				if (~status[FILE_SYS_OPT]) begin
+					rom_addr[17:14] =  1; //bbcb/swmmfs.rom (v1) - Must be in slot 8 because of split RAM/ROM in that slot
+					end
+				else begin
+					rom_addr[17:14] =  14; //bbcb/swmmfs.rom (v2)
+				end
+			end
 		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom       
 		'b1_00_10: rom_addr[17:14] =  4; //m128/adfs1-57.rom     
-		'b1_00_11: rom_addr[17:14] =  5; //m128/mammfs.rom       
+		'b1_00_11: begin   
+				if (~status[FILE_SYS_OPT]) begin
+					rom_addr[17:14] =  5; //m128/mammfs.rom  (v1)
+					end
+				else begin
+					rom_addr[17:14] =  15; //m128/mammfs.rom (v2)
+				end
+			end		
 		'b1_01_00: rom_addr[17:14] =  6; //m128/mos.rom          
 		'b1_10_01: rom_addr[17:14] =  7; //m128/dfs.rom          
 		'b1_10_10: rom_addr[17:14] =  8; //m128/viewsht.rom      
