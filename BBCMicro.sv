@@ -615,40 +615,9 @@ bbc_micro_core BBCMicro
 
 wire [7:0] audio_sn;
 
-//assign AUDIO_L = {audio_sn, 8'd0};
-//assign AUDIO_R = {audio_sn, 8'd0};
 assign AUDIO_MIX = 0;
 assign AUDIO_S = 1;
 
-// ### hack for Elite
-// wire ce_vids = (ce_vid & (clk_sel ? ce_32 : ce_24));
-// reg  ce_pix;
-// always @(posedge CLK_VIDEO) begin
-	// reg old_vs; // Old vertical sync
-	// reg [2:0] rate;
-	// reg vrate1, vrate2;
-	// reg [2:0] div;
-	
-	// old_vs <= VSync;
-	// if(old_vs & ~VSync) begin // Vsync goes low?
-		// rate <= 3'b100;
-		// vrate2 <= vrate1;
-		// vrate1 <= 0;
-	// end
-	
-	// if(~HBlank & ~VBlank & ce_vids) begin
-		// if(rate[2]) // First time we are here?
-			// rate <= ce_rate; // Set rate to current rate and clear the top bit (ce_rate is only 2 bits)
-		// else 	
-			// if(rate[1:0] != ce_rate)  // rate has changes
-				// vrate1 <= 1;          // set vrate1 to indicate a change
-	// end
-	
-	// div <= div + 1'd1;
-	// if(div == 5) div <= 0;
-
-	// ce_pix <= vrate2 ? !div : ce_vids;
-// end
 
 wire [1:0] scale = status[3:2];
 
