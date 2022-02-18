@@ -225,13 +225,14 @@ video_freak video_freak
 // 0H      - Reserved - MMFS or Floppy
 // 0P (25) - MMFS V1 or V2
 `include "build_id.v" 
+parameter AUTO_START_OPT = 12;
 parameter FILE_SYS_OPT = 25;
 
 parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
 	"S0,VHDIMGMMB;", // Allow .VHD or .MMB files to be loaded (MMFSv1) or .IMG (MMFS v2)
-	"OC,Autostart,Yes,No;",
+	"OC,Autostart,No,Yes;",
 	"OP,File System,MMFS-V1,MMFS-V2;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
@@ -359,7 +360,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c24
 
 /////////////////  RESET  /////////////////////////
 
-wire reset = RESET | status[0] | buttons[1] | (~status[12] & img_mounted);
+wire reset = RESET | status[0] | buttons[1] | (status[AUTO_START_OPT] & img_mounted);
 
 ////////////////  MEMORY  /////////////////////////
 
@@ -565,7 +566,7 @@ bbc_micro_core BBCMicro
 	
 	//.RTC(RTC),
 
-	.keyb_dip({4'd0, ~status[12], ~status[9:7]}),
+	.keyb_dip({4'd0, status[AUTO_START_OPT], ~status[9:7]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),
