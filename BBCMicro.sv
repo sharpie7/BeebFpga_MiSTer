@@ -364,16 +364,20 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 
 
 // Beeb ROM Images
+// NOTE: Slots 0-3 and 9-15 correspond to the equivalent paged ROMS in the BBC
+// Slots 4-7 are presented as RAM and these ROMS are not in the paged ROM space
+// The ROM in slot 4 becomes the high ROM used for the OS
+// Slot 8 is special. In the BBC B it is split ROM/RAM used for MMFS. In MASTER it is normal paged ROM
 
 // 00 00xx empty     
 // 00 01xx empty     
 // 00 10xx empty     
 // 00 11xx empty     
-// 01 00xx bbcb/os12.rom         
+// 01 00xx bbcb/os12.rom   - High ROM     
 // 01 01xx empty     
 // 01 10xx empty     
 // 01 11xx empty     
-// 10 00xx bbcb/swmmfs.rom       
+// 10 00xx bbcb/swmmfs.rom    - Must be in slot 8 because of split RAM/ROM in that slot     
 // 10 01xx empty     
 // 10 10xx empty     
 // 10 11xx empty     
@@ -388,7 +392,7 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 // 00 01xx empty     
 // 00 10xx m128/adfs1-57.rom     
 // 00 11xx m128/mammfs.rom       
-// 01 00xx m128/mos.rom          
+// 01 00xx m128/mos.rom    - High ROM      
 // 01 01xx empty     
 // 01 10xx empty     
 // 01 11xx empty     
@@ -405,7 +409,7 @@ always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
 	case({m128, mem_addr[17:14]})
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
-		'b0_10_00: rom_addr[17:14] =  1; //bbcb/swmmfs.rom
+		'b0_10_00: rom_addr[17:14] =  1; //bbcb/swmmfs.rom - Must be in slot 8 because of split RAM/ROM in that slot
 		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom       
 		'b1_00_10: rom_addr[17:14] =  4; //m128/adfs1-57.rom     
@@ -451,6 +455,7 @@ always @(posedge clk_sys) ram_dout <= ram[mem_addr[17:0]];
 reg old_we;
 always @(posedge clk_sys) old_we <= mem_we_n;
 
+// 16k blocks of RAM (not all RAM in each block is used)
 // 00 00xx  Co Processor
 // 00 01xx  Co Processor
 // 00 10xx  Co Processor
@@ -466,7 +471,7 @@ always @(posedge clk_sys) old_we <= mem_we_n;
 // 10 1010  Private RAM (4K, at 8000-8FFF)       (unused in Beeb Mode)
 // 10 1011  Shadow memory (4K, at 3000-3FFF)     (unused in Beeb Mode)
 // 10 11xx  Shadow memory (16K, at 4000-7FFF)    (unused in Beeb Mode)
-// 11 00xx  RAM Slot 8 (B600-BFFF)
+// 11 00xx  RAM Slot 8 (B600-BFFF) For SWMMFS - BBC B Only
 // 11 01xx  unused
 // 11 10xx  unused
 // 11 11xx  unused
@@ -584,7 +589,7 @@ wire [7:0] audio_sn;
 assign AUDIO_MIX = 0;
 assign AUDIO_S = 1;
 
-// ### Massive hack
+// ### hack for Elite
 // wire ce_vids = (ce_vid & (clk_sel ? ce_32 : ce_24));
 // reg  ce_pix;
 // always @(posedge CLK_VIDEO) begin

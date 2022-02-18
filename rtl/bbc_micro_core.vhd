@@ -1731,7 +1731,7 @@ begin
     -- 110 1010 xxxx xxxx xxxx = Filing System RAM (4K, at D000-DFFF) (unused in Beeb Mode)
     -- 110 1011 xxxx xxxx xxxx = Shadow memory (4K, at 3000-3FFF)     (unused in Beeb Mode)
     -- 110 11xx xxxx xxxx xxxx = Shadow memory (16K, at 4000-7FFF)    (unused in Beeb Mode)
-    -- 111 00xx xxxx xxxx xxxx = RAM Slot 8 (B600-BFFF)
+    -- 111 00xx xxxx xxxx xxxx = RAM Slot 8 (B600-BFFF) - BBC B only. Used for SWMMFS
     -- 111 01xx xxxx xxxx xxxx = unused
     -- 111 10xx xxxx xxxx xxxx = unused
     -- 111 11xx xxxx xxxx xxxx = unused
