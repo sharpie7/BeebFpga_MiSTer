@@ -1,6 +1,8 @@
 # BeebFpga_MiSTer
 
-An experiment in building a BBC Micro MiSTer core by using the [official core](https://github.com/MiSTer-devel/BBCMicro_MiSTer) harness with the [BeebFPGA](https://github.com/hoglet67/BeebFpga) emulation. The BeebFPGA is actively maintained and incorporates a range of improvements to the emulation over the official Mister Core.
+An experiment in building a BBC Micro MiSTer core by using the [official core](https://github.com/MiSTer-devel/BBCMicro_MiSTer) harness with the [BeebFPGA](https://github.com/hoglet67/BeebFpga) emulation. The BeebFPGA is actively maintained and incorporates a range of improvements to the emulation over the official MISTer Core.
+
+This core also supports MMFSv2 allowing SSD files stored on the secondary SD card to be accessed directly.
 
 ## Filing Systems
 
@@ -49,3 +51,4 @@ Aside: Back in the day I did have a Music 500 (essentially the same hardware as 
 - Only HDMI output has been tested. VGA may not be good (or working at all!)
 - Mode 7 characters don't look nice
 - Sound mixing between the Music 5000 output and the BBC sound isn't good. Don't play both at once.
+- The "VideoNuLA" (a modern upgrade to the original VideoULA) is not supported.
