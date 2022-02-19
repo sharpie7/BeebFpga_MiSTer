@@ -232,8 +232,10 @@ parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
 	"S0,VHDIMGMMB;", // Allow .VHD or .MMB files to be loaded (MMFSv1) or .IMG (MMFS v2)
+	"S1,SSDDSD;",
+	"S2,SSDDSD;",
 	"OC,Autostart,No,Yes;",
-	"OP,File System,MMFS-V1,MMFS-V2;",
+	"OP,MMFS Version,MMFS-V1,MMFS-V2;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -295,19 +297,19 @@ wire        ioctl_download;
 wire  [7:0] ioctl_index;
 wire        ioctl_wr;
 wire [24:0] ioctl_addr;
-wire [7:0] ioctl_dout;
+wire [7:0]  ioctl_dout;
 wire        forced_scandoubler;
 wire [21:0] gamma_bus;
 
-wire [31:0] sd_lba[1];
-wire        sd_rd;
-wire        sd_wr;
-wire        sd_ack;
-wire  [12:0] sd_buff_addr;
-wire [7:0] sd_buff_dout;
-wire [7:0] sd_buff_din[1];
+wire [31:0] sd_lba[3];
+wire [2:0]  sd_rd;
+wire [2:0]  sd_wr;
+wire [2:0]  sd_ack;
+wire [12:0] sd_buff_addr;
+wire [7:0]  sd_buff_dout;
+wire [7:0]  sd_buff_din[3];
 wire        sd_buff_wr;
-wire        img_mounted;
+wire [2:0]  img_mounted;
 wire        img_readonly;
 wire [63:0] img_size;
 wire        sd_ack_conf;
@@ -315,7 +317,7 @@ wire        sd_ack_conf;
 wire [64:0] RTC;
 
 // hps_io #(.STRLEN($size(CONF_STR)>>3), .WIDE(1)) hps_io
-hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c244
+hps_io #(.CONF_STR(CONF_STR),.VDNUM(3),.BLKSZ(2)) hps_io // IES Updated from c244
 
 
 (
@@ -326,6 +328,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(1),.BLKSZ(2)) hps_io // IES Updated from c24
 
 	.buttons(buttons),
 	.status(status),
+	.status_menumask(),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 
@@ -389,7 +392,7 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 // 00 00xx empty     
 // 00 01xx empty     
 // 00 10xx empty     
-// 00 11xx empty     
+// 00 11xx m128/dfs.rom     
 // 01 00xx bbcb/os12.rom   - High ROM     
 // 01 01xx empty     
 // 01 10xx empty     
@@ -400,7 +403,7 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 // 10 11xx empty     
 // 11 00xx empty     
 // 11 01xx empty     
-// 11 10xx bbcb/ram_master_v6.rom
+// 11 10xx empty
 // 11 11xx bbcb/basic2.rom       
 
 // Master ROM Images
@@ -425,6 +428,7 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
 	case({m128, mem_addr[17:14]})
+		'b0_00_11: rom_addr[17:14] =  7; //m128/dfs.rom
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
 		'b0_10_00: begin
 				if (~status[FILE_SYS_OPT]) begin
@@ -434,7 +438,6 @@ always_comb begin
 					rom_addr[17:14] =  14; //bbcb/swmmfs.rom (v2)
 				end
 			end
-		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom       
 		'b1_00_10: rom_addr[17:14] =  4; //m128/adfs1-57.rom     
 		'b1_00_11: begin   
@@ -459,9 +462,9 @@ end
 
 always_comb begin
 	case({m128, mem_addr[17:14]})
+		'b0_00_11,
 		'b0_01_00,
 		'b0_10_00,
-		'b0_11_10,
 		'b0_11_11,
 		'b1_00_10,
 		'b1_00_11,
@@ -522,6 +525,7 @@ wire       ce_pix;
 
 bbc_micro_core BBCMicro
 (
+    .clksys(clk_sys),
 	.clock_32(clk_32),
 	.clock_48(clk_48),
 
@@ -566,7 +570,7 @@ bbc_micro_core BBCMicro
 	
 	//.RTC(RTC),
 
-	.keyb_dip({4'd0, status[AUTO_START_OPT], ~status[9:7]}),
+	.keyb_dip({4'd01, ~status[12], ~status[9:7]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),
@@ -596,6 +600,17 @@ bbc_micro_core BBCMicro
 	.m128_mode(m128),
 	.copro_mode(|status[6:5]),
 	
+	.img_mounted    ( img_mounted[2:1] ),
+	.img_size       ( img_size       ),
+	.sd_lba         ( fd_sd_lba      ),
+	.sd_rd          ( sd_rd[2:1]       ),
+	.sd_wr          ( sd_wr[2:1]       ),
+	.sd_ack         ( sd_ack[2:1]      ),
+	.sd_buff_addr   ( sd_buff_addr[8:0]   ),
+	.sd_dout        ( sd_buff_dout   ),
+	.sd_din         ( fd_sd_buff_din ),
+	.sd_dout_strobe ( sd_buff_wr ),
+	
 	.p_spi_ssel(),
 	.p_spi_sck(),
 	.p_spi_mosi(),
@@ -612,6 +627,21 @@ bbc_micro_core BBCMicro
 	.ext_tube_do(),
 	.test()
 );
+
+
+wire [31:0] fd_sd_lba;
+wire [7:0] fd_sd_buff_din;
+
+
+always @(posedge clk_48)
+begin
+	// ajs hack for now
+	sd_buff_din[1] <= fd_sd_buff_din;
+	sd_lba[1]      <=  fd_sd_lba;
+	sd_buff_din[2] <= fd_sd_buff_din;
+	sd_lba[2]      <=fd_sd_lba;
+
+end
 
 wire [7:0] audio_sn;
 
@@ -652,15 +682,22 @@ wire sdmiso = vsd_sel ? vsdmiso : SD_MISO;
 wire sdss;
 
 reg vsd_sel = 0;
-always @(posedge clk_sys) if(img_mounted) vsd_sel <= |img_size;
+always @(posedge clk_sys) if(img_mounted[0]) vsd_sel <= |img_size;
 
 wire vsdmiso;
 sd_card #(.WIDE(0)) sd_card // IES Updated from c244
 (
 	.*,
+	
+	.img_mounted(img_mounted[0]),
 	.sd_buff_addr(sd_buff_addr[8:0]),
+	.sd_rd(sd_rd[0]),
+	.sd_wr(sd_wr[0]),
+	.sd_ack(sd_ack[0]),
+	
 	.sd_lba(sd_lba[0]),
 	.sd_buff_din(sd_buff_din[0]),
+	
 	.clk_spi(clk_sys),
 	.sdhc(1),
 	.sck(sdclk),
