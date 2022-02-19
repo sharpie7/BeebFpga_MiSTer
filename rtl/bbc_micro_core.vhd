@@ -259,49 +259,50 @@ end function;
 
 constant RGB_WIDTH : integer := calc_rgb_width(IncludeVideoNuLA);
 
- 	component fdc1772 is
-		generic (
-			CLK_EN              : integer := 4000;  -- old values tried with different ram/success : 42666000 42800000 42680000 42856000
-			--			CLK_EN           : integer := 2033;
-			EXT_MOTOR : integer := 1  -- 256 bytes/sector
-		);
-		port (
-			clksys           : in  std_logic;
-			clkcpu           : in  std_logic;
-			clk8m_en         : in  std_logic;
+component fdc1772 is
+	generic (
+		CLK_EN              : integer := 4000;  -- old values tried with different ram/success : 42666000 42800000 42680000 42856000
+		--			CLK_EN           : integer := 2033;
+		EXT_MOTOR : integer := 1  -- 256 bytes/sector
+	);
+	port (
+		clksys           : in  std_logic;
+		clkcpu           : in  std_logic;
+		clk8m_en         : in  std_logic;
 
-			floppy_drive     : in  std_logic_vector( 1 downto 0);
-			floppy_side      : in  std_logic;
-			floppy_reset     : in  std_logic;
-			floppy_step      : out  std_logic;
-			floppy_motor     : in  std_logic;
-			floppy_ready     : out  std_logic;
+		floppy_drive     : in  std_logic_vector( 1 downto 0);
+		floppy_side      : in  std_logic;
+		floppy_reset     : in  std_logic;
+		floppy_step      : out  std_logic;
+		floppy_motor     : in  std_logic;
+		floppy_ready     : out  std_logic;
 
-			irq              : out std_logic;
-			drq              : out std_logic;
+		irq              : out std_logic;
+		drq              : out std_logic;
 
-			cpu_addr         : in  std_logic_vector( 1 downto 0);
-			cpu_sel          : in  std_logic;
-			cpu_rw           : in  std_logic;
-			cpu_din          : in  std_logic_vector( 7 downto 0);
-			cpu_dout         : out std_logic_vector( 7 downto 0);
+		cpu_addr         : in  std_logic_vector( 1 downto 0);
+		cpu_sel          : in  std_logic;
+		cpu_rw           : in  std_logic;
+		cpu_din          : in  std_logic_vector( 7 downto 0);
+		cpu_dout         : out std_logic_vector( 7 downto 0);
 
-			img_mounted      : in  std_logic_vector( 1 downto 0);
-			img_wp           : in  std_logic_vector( 1 downto 0);
-			img_size         : in  std_logic_vector(31 downto 0); -- in bytes
+		img_mounted      : in  std_logic_vector( 1 downto 0);
+		img_wp           : in  std_logic_vector( 1 downto 0);
+		img_size         : in  std_logic_vector(31 downto 0); -- in bytes
 
-			sd_lba           : out std_logic_vector(31 downto 0);
-			sd_rd            : out std_logic_vector( 1 downto 0);
-			sd_wr            : out std_logic_vector( 1 downto 0);
+		sd_lba           : out std_logic_vector(31 downto 0);
+		sd_rd            : out std_logic_vector( 1 downto 0);
+		sd_wr            : out std_logic_vector( 1 downto 0);
 --			sd_ack           : in  std_logic_vector( 1 downto 0);
-			sd_ack           : in  std_logic;
-			sd_buff_addr     : in  std_logic_vector( 8 downto 0);
-			sd_dout          : in  std_logic_vector( 7 downto 0);
-			sd_din           : out std_logic_vector( 7 downto 0);
-			sd_dout_strobe   : in  std_logic
+		sd_ack           : in  std_logic;
+		sd_buff_addr     : in  std_logic_vector( 8 downto 0);
+		sd_dout          : in  std_logic_vector( 7 downto 0);
+		sd_din           : out std_logic_vector( 7 downto 0);
+		sd_dout_strobe   : in  std_logic
 --			drive_led		  : out std_logic
-		);
-	end component ;
+	);
+end component ;
+
 
 -------------
 -- Signals
@@ -1660,11 +1661,11 @@ begin
 						if (m128_mode = '0' or cpu_a(3 downto 2) = "00") then
 									vidproc_enable <= not cpu_r_nw; -- does this need master off?
 						end if;
-								if (m128_mode = '1' and cpu_a(3)='1') then -- AJS
-									fdc_enable<='1';
-								elsif (m128_mode = '1' and cpu_a(3)='0' and cpu_a(2)='1') then -- AJS
-								   fdcon_enable<='1';
-								end if;
+						if (m128_mode = '1' and cpu_a(3)='1') then -- AJS
+							fdc_enable<='1';
+						elsif (m128_mode = '1' and cpu_a(3)='0' and cpu_a(2)='1') then -- AJS
+						   fdcon_enable<='1';
+						end if;
                         -- 0xFE20
                        -- vidproc_enable <= not cpu_r_nw; -- old version pre disk support
                     elsif m128_mode = '1' then
@@ -1912,7 +1913,7 @@ begin
         end if;
     end process;
 	
-	 -- FDC (Master)
+	 -- FDC
 
 	fdc : fdc1772
 	port map

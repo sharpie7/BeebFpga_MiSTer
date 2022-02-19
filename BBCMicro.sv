@@ -428,7 +428,7 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
 	case({m128, mem_addr[17:14]})
-		'b0_00_11: rom_addr[17:14] =  7; //m128/dfs.rom
+		'b0_00_11: rom_addr[17:14] =  4; //bbcb/Acorn-DFS-2.26.rom
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
 		'b0_10_00: begin
 				if (~status[FILE_SYS_OPT]) begin
@@ -438,8 +438,8 @@ always_comb begin
 					rom_addr[17:14] =  14; //bbcb/swmmfs.rom (v2)
 				end
 			end
-		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom       
-		'b1_00_10: rom_addr[17:14] =  4; //m128/adfs1-57.rom     
+		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
+		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom           
 		'b1_00_11: begin   
 				if (~status[FILE_SYS_OPT]) begin
 					rom_addr[17:14] =  5; //m128/mammfs.rom  (v1)
@@ -465,8 +465,8 @@ always_comb begin
 		'b0_00_11,
 		'b0_01_00,
 		'b0_10_00,
+		'b0_11_10,
 		'b0_11_11,
-		'b1_00_10,
 		'b1_00_11,
 		'b1_01_00,
 		'b1_10_01,
@@ -570,7 +570,7 @@ bbc_micro_core BBCMicro
 	
 	//.RTC(RTC),
 
-	.keyb_dip({4'd01, ~status[12], ~status[9:7]}),
+	.keyb_dip({4'd01, status[AUTO_START_OPT], ~status[9:7]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),

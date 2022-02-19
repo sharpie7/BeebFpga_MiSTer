@@ -1,6 +1,5 @@
 set_global_assignment -name SDC_FILE BBCMicro.sdc
 set_global_assignment -name SYSTEMVERILOG_FILE BBCMicro.sv
-set_global_assignment -name VHDL_FILE rtl/bbc_micro_core.vhd -hdl_version VHDL_2008
 set_global_assignment -name VHDL_FILE rtl/CoPro6502.vhd
 set_global_assignment -name VHDL_FILE rtl/CoProSPI.vhd
 set_global_assignment -name VHDL_FILE rtl/mister_keyboard.vhd
@@ -46,5 +45,6 @@ set_global_assignment -name VERILOG_FILE rtl/Tube/tube.v
 set_global_assignment -name VHDL_FILE rtl/Tube/tube_comp_pack.vhd
 set_global_assignment -name VERILOG_FILE rtl/fdc1772/fdc1772.v
 set_global_assignment -name VERILOG_FILE rtl/fdc1772/floppy.v
+set_global_assignment -name VHDL_FILE rtl/bbc_micro_core.vhd -hdl_version VHDL_2008
 
 
