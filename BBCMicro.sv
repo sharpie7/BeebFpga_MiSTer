@@ -438,7 +438,7 @@ always_comb begin
 					rom_addr[17:14] =  14; //bbcb/swmmfs.rom (v2)
 				end
 			end
-		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom
+		'b0_11_10: rom_addr[17:14] =  4; //bbcb/ram_master_v6.rom --- was 2
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom           
 		'b1_00_11: begin   
 				if (~status[FILE_SYS_OPT]) begin
@@ -462,9 +462,9 @@ end
 
 always_comb begin
 	case({m128, mem_addr[17:14]})
-		'b0_00_11,
+	//	'b0_00_11,
 		'b0_01_00,
-		'b0_10_00,
+	//	'b0_10_00,
 		'b0_11_10,
 		'b0_11_11,
 		'b1_00_11,

@@ -1696,10 +1696,20 @@ begin
                     end if;
                 when "100" =>
                       -- 0xFE80
-                    if IncludeAMXMouse then
+                    if (m128_mode = '1' and IncludeAMXMouse) then
                         user_via_enable <= '1';
                     end if;
---              when "101" => adlc_enable <= '1';       -- 0xFEA0
+					if (m128_mode = '0' and cpu_a(2)='1') then -- FE84 - FE87 FDC for BBC B
+						fdc_enable<='1';
+					elsif (m128_mode = '0' and cpu_a(2 downto 0)="000") then -- FE80 FDC for BBC B
+					   fdcon_enable<='1';
+					end if;
+                when "101" =>      
+					-- 0xFEA0
+					-- Normally Econet, but we've moved user VIA here for BBC B
+                    if (m128_mode = '0' and IncludeAMXMouse) then
+                        user_via_enable <= '1';
+                    end if;
                 when "110" =>
                     -- 0xFEC0
                     if m128_mode = '0' then
@@ -1720,7 +1730,7 @@ begin
                                 end if;
                             end if;
                         elsif IncludeCoProExt then
-                            -- On the Model B, the external tube takes precesence
+                            -- On the Model B, the external tube takes precedence
                             ext_tube_enable <= '1';
                         elsif IncludeCoPro6502 or IncludeCoProSPI then
                             -- On the Model B, the internal tube can only be
