@@ -172,7 +172,8 @@ module emu
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_TXD, UART_DTR} = 0;
-assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+assign {SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
+// assign {SDRAM_DQ, SDRAM_A, SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 //assign {SDRAM_BA, SDRAM_CLK, SDRAM_CKE, SDRAM_DQML, SDRAM_DQMH, SDRAM_nWE, SDRAM_nCAS, SDRAM_nRAS, SDRAM_nCS} = 'Z;
 assign {DDRAM_CLK, DDRAM_BURSTCNT, DDRAM_ADDR, DDRAM_DIN, DDRAM_BE, DDRAM_RD, DDRAM_WE} = 0;
  
@@ -183,7 +184,8 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 assign HDMI_FREEZE = 0;
 
-// assign SDRAM_DQ[15:8] = 'Z;	
+ assign SDRAM_DQ[15:9] = 'Z;	
+ assign SDRAM_DQ[8] = test_rom;
 // assign SDRAM_A[0] = sdmiso; // brown
 // assign SDRAM_A[1] = sdss;   // red
 // assign SDRAM_A[2] = sdclk;  // orange
@@ -377,6 +379,7 @@ wire  [7:0] mem_din;
 reg  [17:0] rom_addr;
 reg  [7:0] rom_dout;
 reg  [7:0] rom_data;
+reg  test_rom;
 
 (* ram_init_file = "roms/rom.mif" *) reg [7:0] rom[16 * 16384];
 always @(posedge clk_sys) if(!ioctl_index && ioctl_wr && reset) rom[reset ? ioctl_addr[17:0] : rom_addr[17:0]] <= ioctl_dout;
@@ -427,8 +430,12 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 
 always_comb begin
 	rom_addr[13:0] = mem_addr[13:0];
+	test_rom = 0;
 	case({m128, mem_addr[17:14]})
-		'b0_00_11: rom_addr[17:14] =  4; //bbcb/Acorn-DFS-2.26.rom
+		'b0_00_11: begin
+			rom_addr[17:14] =  4; //bbcb/Acorn-DFS-2.26.rom
+			test_rom = 1;
+		end
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
 		'b0_10_00: begin
 				if (~status[FILE_SYS_OPT]) begin
@@ -438,7 +445,7 @@ always_comb begin
 					rom_addr[17:14] =  14; //bbcb/swmmfs.rom (v2)
 				end
 			end
-		'b0_11_10: rom_addr[17:14] =  4; //bbcb/ram_master_v6.rom --- was 2
+		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom 
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom           
 		'b1_00_11: begin   
 				if (~status[FILE_SYS_OPT]) begin
@@ -462,7 +469,7 @@ end
 
 always_comb begin
 	case({m128, mem_addr[17:14]})
-	//	'b0_00_11,
+		'b0_00_11,
 		'b0_01_00,
 	//	'b0_10_00,
 		'b0_11_10,
@@ -570,7 +577,7 @@ bbc_micro_core BBCMicro
 	
 	//.RTC(RTC),
 
-	.keyb_dip({4'd01, status[AUTO_START_OPT], ~status[9:7]}),
+	.keyb_dip({4'b1110, status[AUTO_START_OPT], ~status[9:7]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),
@@ -625,7 +632,7 @@ bbc_micro_core BBCMicro
 	.ext_tube_a(),
 	.ext_tube_di(),
 	.ext_tube_do(),
-	.test()
+	.test(SDRAM_DQ[7:0])
 );
 
 

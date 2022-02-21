@@ -71,11 +71,11 @@ use ieee.numeric_std.all;
 
 entity bbc_micro_core is
     generic (
-        IncludeAMXMouse    : boolean := true;
+        IncludeAMXMouse    : boolean := false;
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := true;
+        IncludeMusic5000   : boolean := false;
         IncludeICEDebugger : boolean := false; -- Not tested in this project
-        IncludeCoPro6502   : boolean := true;  -- The three co pro options
+        IncludeCoPro6502   : boolean := false;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project
@@ -612,6 +612,7 @@ signal mouse_via_enable :   std_logic;      -- 0xFE60-FE7F
 --signal adlc_enable      :   std_logic;      -- 0xFEA0-FEBF (Econet)
 signal int_tube_enable  :   std_logic;      -- 0xFEE0-FEFF
 signal ext_tube_enable  :   std_logic;      -- 0xFEE0-FEFF
+signal test_fe80 : std_logic;
 
 signal   fddc_enable	: std_logic;
 signal   fdc_enable		: std_logic;
@@ -1615,6 +1616,7 @@ begin
     process(cpu_a,io_sheila,m128_mode,copro_mode,cpu_r_nw,acc_itu)
     begin
         -- All regions normally de-selected
+		test_fe80 <= '0';
         crtc_enable <= '0';
         acia_enable <= '0';
         serproc_enable <= '0';
@@ -1660,8 +1662,7 @@ begin
                     if cpu_a(4) = '0' then
 						if (m128_mode = '0' or cpu_a(3 downto 2) = "00") then
 									vidproc_enable <= not cpu_r_nw; -- does this need master off?
-						end if;
-						if (m128_mode = '1' and cpu_a(3)='1') then -- AJS
+						elsif (m128_mode = '1' and cpu_a(3)='1') then -- AJS
 							fdc_enable<='1';
 						elsif (m128_mode = '1' and cpu_a(3)='0' and cpu_a(2)='1') then -- AJS
 						   fdcon_enable<='1';
@@ -1696,10 +1697,10 @@ begin
                     end if;
                 when "100" =>
                       -- 0xFE80
+					  test_fe80 <= '1';
                     if (m128_mode = '1' and IncludeAMXMouse) then
                         user_via_enable <= '1';
-                    end if;
-					if (m128_mode = '0' and cpu_a(2)='1') then -- FE84 - FE87 FDC for BBC B
+                    elsif (m128_mode = '0' and cpu_a(2)='1') then -- FE84 - FE87 FDC for BBC B
 						fdc_enable<='1';
 					elsif (m128_mode = '0' and cpu_a(2 downto 0)="000") then -- FE80 FDC for BBC B
 					   fdcon_enable<='1';
@@ -1977,7 +1978,7 @@ begin
 
 
 -- FDC Control Register (Master)
-    process(clock_32,reset_n)
+    process(clock_48,reset_n)
     begin
         if reset_n = '0' then
 				floppy_drive <= "11";
@@ -1986,7 +1987,7 @@ begin
 			--	floppy_density <= '0';
 				floppy_motor<='0';
 
-				elsif rising_edge(clock_32) then
+				elsif rising_edge(clock_48) then
 				if (cpu_clken) then
 --    fe24-fe27  FDC Latch      1770 Control latch
 					if (fdcon_enable ='1' and  cpu_r_nw='0') then
@@ -2414,7 +2415,5 @@ begin
 --                     '1';
 
     -- Test output
-    test <= user_via_pb_oe_n(0) & user_via_pb_out(0) & user_via_pb_out(1) & user_via_pb_oe_n(1) 
-	       & user_via_cb1_oe_n & user_via_cb1_out & sdclk_int & user_via_enable;
-
+    test <= "0000" & test_fe80 & cpu_r_nw &	fdc_enable &   fdcon_enable;
 end architecture;
