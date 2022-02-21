@@ -1971,14 +1971,26 @@ begin
 --        7,6       Not used.
 --         5        Double density select (0 = double, 1 = single).
 --         4        Side select (0 = side 0, 1 = side 1).
---         3        Drive select 2.
+--         3        Drive select 2. (Motor?)
 --         2        Reset drive controller chip. (0 = reset controller, 1 = no reset)
+--         1        Drive select 1.
+--         0        Drive select 0.
+--
+-- From http://www.adsb.co.uk/bbc/disk_controllers/ddfs_v2.jpg
+--   BBC B drive control:
+--        Bit       Meaning
+--        -----------------
+--        7,6       Not used.
+--         5        Reset controller
+--         4        Not used
+--         3        Double Density select
+--         2        Side select.
 --         1        Drive select 1.
 --         0        Drive select 0.
 
 
 -- FDC Control Register (Master)
-    process(clock_48,reset_n)
+    process(clock_32,reset_n)
     begin
         if reset_n = '0' then
 				floppy_drive <= "11";
@@ -1987,15 +1999,23 @@ begin
 			--	floppy_density <= '0';
 				floppy_motor<='0';
 
-				elsif rising_edge(clock_48) then
+				elsif rising_edge(clock_32) then
 				if (cpu_clken) then
 --    fe24-fe27  FDC Latch      1770 Control latch
 					if (fdcon_enable ='1' and  cpu_r_nw='0') then
-						floppy_drive <= not cpu_do(1) & not cpu_do(0) ;
-						floppy_reset <= cpu_do(2);
-						floppy_side <= not cpu_do(4);
-					--	floppy_density <= cpu_do(5);
-						floppy_motor <= '0';
+						if (m128_mode = '1') then
+							floppy_drive <= not cpu_do(1) & not cpu_do(0) ;
+							floppy_reset <= cpu_do(2);
+							floppy_side <= not cpu_do(4);
+						--	floppy_density <= cpu_do(5);
+							floppy_motor <= '0';
+						else
+							floppy_drive <= not cpu_do(1) & not cpu_do(0) ;
+							floppy_reset <= cpu_do(5);
+							floppy_side <= not cpu_do(2);
+						--	floppy_density <= cpu_do(3);
+							floppy_motor <= '0';
+						end if;
 					end if;
 				end if;
         end if;

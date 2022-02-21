@@ -952,12 +952,21 @@ always @(*) begin
 	end
 end
 
+
+
 // cpu register write
 reg cmd_rx /* verilator public */;
 reg cmd_rx_i;
 
+
+// Not in WD1772 datasheet, but observed behaviour of Acorn DFS ROM suggests that reset is edge driven and
+// not level driven. In any case it seems that the ROM depends on being able to write to FDC TRACK register
+// while reset is likely low. So, we will only trigger reset on initial assertion
+
+reg last_reset_state = 1;
+
 always @(posedge clkcpu) begin
-	if(!floppy_reset) begin
+	if(!floppy_reset && last_reset_state) begin
 		// clear internal registers
 		cmd <= 8'h00;
 		track <= 8'h00;
@@ -1037,6 +1046,7 @@ always @(posedge clkcpu) begin
 		if (track_dec_strobe) track <= track - 1'd1;
 		if (track_clear_strobe) track <= 8'd0;
 	end
+	last_reset_state = floppy_reset;
 end
 
 endmodule
