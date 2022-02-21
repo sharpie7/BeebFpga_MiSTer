@@ -49,19 +49,7 @@
 -- INTON/INTOFF registers
 -- refactor NVRAM (146818 off System VIA Port A)
 
--- IES: Architectural differences between BeebFPGA and MISTer
--- **********************************************************
--- * In BeebFPGA the scan doubler function is in this file and outputs are VGA signals (I assume)
--- In MISTer the scandoubler is external. This file outputs pixel clocks
--- It seems to that architecturally it would be better to treat Scandoubler as not part of the platform independent pice
--- For now, comment it out
---
--- * In BeebFPGA this file includes PS2 and original keyboard support. In MISTer the keyboard is connected to the HPS
--- and the native hardware is not exposed.
---
--- * Similar story with mouse (not that a mouse was a popular ad-on for the BBC IIRC)
--- 
--- * RTC
+
 
 
 library ieee;
@@ -71,11 +59,11 @@ use ieee.numeric_std.all;
 
 entity bbc_micro_core is
     generic (
-        IncludeAMXMouse    : boolean := false;
+        IncludeAMXMouse    : boolean := true;
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := false;
+        IncludeMusic5000   : boolean := true;
         IncludeICEDebugger : boolean := false; -- Not tested in this project
-        IncludeCoPro6502   : boolean := false;  -- The three co pro options
+        IncludeCoPro6502   : boolean := true;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project
@@ -89,7 +77,7 @@ entity bbc_micro_core is
 		-- IES In MISTer only _32 and _24
  --       clock_27       : in    std_logic; -- IES Only used in scandouble
 		clksys         : in  std_logic; -- Used in FDC
-        clock_32       : in    std_logic; -- IES Apparently unused
+        clock_32       : in    std_logic;
         clock_48       : in    std_logic; -- IES Master clock for many things
 --        clock_96       : in    std_logic; -- IES Only used in scandouble
         clock_avr      : in    std_logic; -- IES Only used in ICEDebugger
@@ -1989,8 +1977,8 @@ begin
 --         0        Drive select 0.
 
 
--- FDC Control Register (Master)
-    process(clock_32,reset_n)
+-- FDC Control Register
+    process(clock_48,reset_n)
     begin
         if reset_n = '0' then
 				floppy_drive <= "11";
@@ -1999,7 +1987,7 @@ begin
 			--	floppy_density <= '0';
 				floppy_motor<='0';
 
-				elsif rising_edge(clock_32) then
+				elsif rising_edge(clock_48) then
 				if (cpu_clken) then
 --    fe24-fe27  FDC Latch      1770 Control latch
 					if (fdcon_enable ='1' and  cpu_r_nw='0') then

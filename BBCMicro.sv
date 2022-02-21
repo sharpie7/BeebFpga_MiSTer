@@ -571,7 +571,7 @@ bbc_micro_core BBCMicro
 	
 	//.RTC(RTC),
 
-	.keyb_dip({4'b1110, status[AUTO_START_OPT], ~status[9:7]}),
+	.keyb_dip({4'b0000, status[AUTO_START_OPT], ~status[9:7]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),
