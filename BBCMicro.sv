@@ -224,19 +224,20 @@ video_freak video_freak
 // 0D-0E   - Aspect ratio
 // 0F-0G   - Image scaling
 // 0H      - Reserved - MMFS or Floppy
-// 0P (25) - MMFS V1 or V2
+// 0P-R (25-27) - MMFS V1 or V2
 `include "build_id.v" 
 parameter AUTO_START_OPT = 12;
-parameter FILE_SYS_OPT = 25;
+parameter FILE_SYS_OPT_L = 25;
+parameter FILE_SYS_OPT_H = 27;
 
 parameter CONF_STR = {
 	"BBCMicro;;",
 	"-;",
-	"S0,VHDIMGMMB;", // Allow .VHD or .MMB files to be loaded (MMFSv1) or .IMG (MMFS v2)
-	"S1,SSDDSD;",
-	"S2,SSDDSD;",
+	"OPR,Filesystem,MMFSv1,MMFSv2,DFS,MMFSv1&DFS,MMFSv2&DFS;",
+	"h0S0,VHDIMGMMB;", // Allow .VHD or .MMB files to be loaded (MMFSv1) or .IMG (MMFS v2)
+	"h1S1,SSDDSD;",
+	"h1S2,SSDDSD;",
 	"OC,Autostart,No,Yes;",
-	"OP,MMFS Version,MMFS-V1,MMFS-V2;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -253,6 +254,13 @@ parameter CONF_STR = {
 	"JA,Fire;",
 	"V,v",`BUILD_DATE
 };
+
+wire mmfsv1;
+wire mmfsv2;
+wire dfs;
+assign mmfsv1 = (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 0) || (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 3);
+assign mmfsv2 = (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 1) || (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 4);
+assign dfs = status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] >= 2;
 
 /////////////////  CLOCKS  ////////////////////////
 
@@ -329,7 +337,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(3),.BLKSZ(2)) hps_io // IES Updated from c24
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask(),
+	.status_menumask({dfs , (mmfsv1 || mmfsv2)}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 
@@ -431,24 +439,10 @@ always_comb begin
 	case({m128, mem_addr[17:14]})
 		'b0_00_11: rom_addr[17:14] =  4; //bbcb/Acorn-DFS-2.26.rom
 		'b0_01_00: rom_addr[17:14] =  0; //bbcb/os12.rom         
-		'b0_10_00: begin
-				if (~status[FILE_SYS_OPT]) begin
-					rom_addr[17:14] =  1; //bbcb/swmmfs.rom (v1) - Must be in slot 8 because of split RAM/ROM in that slot
-					end
-				else begin
-					rom_addr[17:14] =  14; //bbcb/swmmfs.rom (v2)
-				end
-			end
+		'b0_10_00: rom_addr[17:14] = mmfsv1 ?  1 : 14; //bbcb/swmmfs.rom (v1) or //bbcb/swmmfs.rom (v2) - Must be in slot 8 because of split RAM/ROM in that slot
 		'b0_11_10: rom_addr[17:14] =  2; //bbcb/ram_master_v6.rom 
 		'b0_11_11: rom_addr[17:14] =  3; //bbcb/basic2.rom           
-		'b1_00_11: begin   
-				if (~status[FILE_SYS_OPT]) begin
-					rom_addr[17:14] =  5; //m128/mammfs.rom  (v1)
-					end
-				else begin
-					rom_addr[17:14] =  15; //m128/mammfs.rom (v2)
-				end
-			end		
+		'b1_00_11: rom_addr[17:14] = mmfsv1 ?  5 : 15;  //m128/mammfs.rom  (v1) //m128/mammfs.rom (v2)	
 		'b1_01_00: rom_addr[17:14] =  6; //m128/mos.rom          
 		'b1_10_01: rom_addr[17:14] =  7; //m128/dfs.rom          
 		'b1_10_10: rom_addr[17:14] =  8; //m128/viewsht.rom      
@@ -463,20 +457,20 @@ end
 
 always_comb begin
 	case({m128, mem_addr[17:14]})
-		'b0_00_11,
 		'b0_01_00,
-	//	'b0_10_00,
 		'b0_11_10,
-		'b0_11_11,
-		'b1_00_11,
+		'b0_11_11,	
 		'b1_01_00,
-		'b1_10_01,
 		'b1_10_10,
 		'b1_10_11,
 		'b1_11_00,
 		'b1_11_01,
 		'b1_11_10,
 		'b1_11_11: rom_data = rom_dout;
+		'b0_00_11,
+		'b1_10_01: rom_data = (dfs) ? rom_dout : 0; // Enable/disable DFS
+		'b0_10_00,
+		'b1_00_11: rom_data = (mmfsv1 || mmfsv2) ? rom_dout : 0; // Enable/disable MMFS
 		  default: rom_data = 0;
 	endcase
 end

@@ -2,12 +2,27 @@
 
 An experiment in building a BBC Micro MiSTer core by using the [official core](https://github.com/MiSTer-devel/BBCMicro_MiSTer) harness with the updates in the [BeebFPGA](https://github.com/hoglet67/BeebFpga) emulation. The BeebFPGA is actively maintained and incorporates a range of improvements to the emulation over the official MiSTer Core.
 
+This core supports the original features of the MiSTer core:
+- BBC Model B and Master 128K.
+- Respective CPU per model for best compatibility: 6502 for B, 65C02 for Master 128K.
+- Optional co-processor module with 65C02.
+- Support Secondary SD card as well as images on Primary SD card.
+- Scandoubler with HQ2x for all modes.
+- Support analog joysticks.
+- Emulate joystick with mouse.
+
 This core also supports the following additional features:
 - MMFSv2 allowing SSD files stored on the secondary SD card to be accessed directly.
 - DFS support to access SSD files on both the BBC B and the Master 128
 - Music 5000 sound add-on
 
+## Installing and Using
+
 ## Filing Systems
+
+There are several filing systems supported, and this may seem confusing. As different options support different requirements it seems best to provide the flexibility. One complicating factor is that MiSTer can support two SD cards that are accessed via different means. The primary SD card (on the DE10 Nano) is accessed via the Hard Processor System and presents an API interface to the MiSTer core. The secondary SD card (on the MiSTer expansion) is directly connected to the MiSTer core.
+
+If I doubt I would start with MMFS v1.
 
 ### MMFS v1
 
@@ -25,15 +40,35 @@ Some useful MMFS Commands:
  *DIN [Drive #] <Disk #>   - Mount disk in the specified drive (default 0)
  ```
 
+For a handy MMB file with a good selection of BBC games try the "BEEB.MMB File v1.02" available (from RetroClinic)[http://www.retroclinic.com/docs/index.htm].
+
+
 ### MMFS v2
 
 An alternative filing system of [MMFS v2](https://github.com/hoglet67/MMFS) may be selected from the MiSTer menu. In MMFSv2 you can access SSD disk files on a FAT 32 formatted SD card in the secondary slot. Alternatively, you can pick an a file which is disk image (IMG) on the primary SD card and read SSD files from that.
 
+### Acorn DFS
+
+The classic Acorn DFS can be selected and is supported via emulation of the FD1770 controller. In DFS mode you can mount individual SSD and DSD files from the primary SD Card.
+
+### MMFS and DFS
+
+Both MMFS and DFS may be activated at once. However, I am told by the author of MMFS: "It's generally not recommended to have both MMFS and DFS fitted and active at the same time, as they both use they the file system number, so things get very confusing. This is done to maximise compatibility with games that check specifically that DFS is the current file system by testing the file system number."
+
+If you have both active then note that MMFS will treat `*DISC` and `*DISK` commands as belonging to it. You can used `*OPT 5,1` to disable this and have DFS respond to these commands.
 
 ## Hardware
 
+The simulated machines are pretty close to the standard configurations.
+
+The BBC B has an FC1770 Floppy Disk Controller fitted. The mouse is connected to a VIA at the normal User VIA address. There is an extra VIA at the &FEA0 (normally Econet) that is connected to the secondary SD card.
+
+The Master 128 also has a mouse is connected to a VIA at the normal User VIA address. The SD card is connected to the VIA at &FE80.
+
 ## ROMS
 
+
+## Keyboard Mapping
 
 ## Music 5000
 
@@ -56,6 +91,7 @@ Aside: Back in the day I did have a Music 500 (essentially the same hardware as 
 
 ## Known Bugs and Limitations
 
+- Must manually apply reset using the menu if you change the hardware configuration
 - Only HDMI output has been tested. VGA may not be good (or working at all!)
 - Mode 7 characters don't look nice
 - Sound mixing between the Music 5000 output and the BBC sound isn't good. Don't play both at once.
