@@ -87,7 +87,6 @@ I've got mixed feelings about RAM Master. I can't find any documentation or sour
 
 The following ROMS are fitted:
 ```
-Slot  2 - ADFS (Not supported)
 Slot  3 - MMFS (If active)
 Slot  9 - DFS (If active)
 Slot 10 - View Sheet

@@ -412,14 +412,14 @@ always @(posedge clk_sys) rom_dout <= rom[rom_addr[17:0]];
 // 10 11xx empty     
 // 11 00xx empty     
 // 11 01xx empty     
-// 11 10xx empty
+// 11 10xx bbcb/rammaster6
 // 11 11xx bbcb/basic2.rom       
 
 // Master ROM Images
 
 // 00 00xx empty     
 // 00 01xx empty     
-// 00 10xx m128/adfs1-57.rom     
+// 00 10xx empty  
 // 00 11xx m128/mammfs.rom       
 // 01 00xx m128/mos.rom    - High ROM      
 // 01 01xx empty     
