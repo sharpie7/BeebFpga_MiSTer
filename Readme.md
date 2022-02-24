@@ -4,17 +4,19 @@ An experiment in building a BBC Micro MiSTer core by using the [official core](h
 
 This core supports the original features of the MiSTer core:
 - BBC Model B and Master 128K.
-- Respective CPU per model for best compatibility: 6502 for B, 65C02 for Master 128K.
+- Correct CPU for each model for best compatibility: 6502 for BBC Model B, 65C02 for Master 128K.
 - Optional co-processor module with 65C02.
 - Support Secondary SD card as well as images on Primary SD card.
 - Scandoubler with HQ2x for all modes.
-- Support analog joysticks.
-- Emulate joystick with mouse.
+- Support for analogue joysticks.
+- Emulation of joystick with mouse.
 
 This core also supports the following additional features:
 - MMFSv2 allowing SSD files stored on the secondary SD card to be accessed directly.
 - DFS support to access SSD files on both the BBC B and the Master 128
 - Music 5000 sound add-on
+- Improved compatibility with various software
+- Enhanced keyboard mapping
 
 ## Installing and Using
 
@@ -40,7 +42,7 @@ Some useful MMFS Commands:
  *DIN [Drive #] <Disk #>   - Mount disk in the specified drive (default 0)
  ```
 
-For a handy MMB file with a good selection of BBC games try the "BEEB.MMB File v1.02" available (from RetroClinic)[http://www.retroclinic.com/docs/index.htm].
+For a handy MMB file with a good selection of BBC games try the "BEEB.MMB File v1.02" available [from RetroClinic](http://www.retroclinic.com/docs/index.htm).
 
 
 ### MMFS v2
@@ -67,6 +69,34 @@ The Master 128 also has a mouse is connected to a VIA at the normal User VIA add
 
 ## ROMS
 
+In both machines, ROM slots 4-7 contain RAM which can be loaded with additional ROMs.
+
+### BBC B ROMS
+
+The following ROMs are fitted:
+```
+Slot  3 - DFS (If active)
+Slot  8 - MMFS (If active)
+Slot 15 - RAM Master v6
+Slot 16 - Basic
+```
+
+I've got mixed feelings about RAM Master. I can't find any documentation or source for it. It's a bit intrusive, but also useful so I've kept it in. There is enough information in `*HELP RAM` to workout most of the commands.
+
+### Master 128 ROMS
+
+The following ROMS are fitted:
+```
+Slot  2 - ADFS (Not supported)
+Slot  3 - MMFS (If active)
+Slot  9 - DFS (If active)
+Slot 10 - View Sheet
+Slot 11 - Edit
+Slot 12 - Basic
+Slot 13 - ADFS (Not supported)
+Slot 14 - View
+Slot 15 - Terminal 
+```
 
 ## Keyboard Mapping
 
@@ -76,7 +106,7 @@ There may be more "Caps Lock" keys than you expect! This is to give some reasona
 
 Note that Break is F11. Unlike the official MiSTer implementation you don't need to use Control to get the Break.
 
-![Keyboard](keyboard.png)
+![Keyboard](./keyboard.png)
 
 ## Music 5000
 
