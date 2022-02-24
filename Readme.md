@@ -70,6 +70,14 @@ The Master 128 also has a mouse is connected to a VIA at the normal User VIA add
 
 ## Keyboard Mapping
 
+The keyboard mapping attempts to follow the physical layout of the BBC Micro as much as possible when mapped onto modern keyboards. The diagram below shows the BBC keys on a standard UK layout PC keyboard.
+
+There may be more "Caps Lock" keys than you expect! This is to give some reasonable options for games that use Caps Lock and Control as left and right.
+
+Note that Break is F11. Unlike the official MiSTer implementation you don't need to use Control to get the Break.
+
+![Keyboard](keyboard.png)
+
 ## Music 5000
 
 The Music 5000 is an add-on for the BBC Micro supporting wave-table synthesis. At the time it was fairly rare though it had a cult following. It was an external box that connected to the BBC over the "1MHz Bus" port. Retrospectively it's had a second life though emulation and modern reconstruction of the hardware.
