@@ -3,17 +3,19 @@
 An experiment in building a BBC Micro MiSTer core by using the [official core](https://github.com/MiSTer-devel/BBCMicro_MiSTer) harness with the updates in the [BeebFPGA](https://github.com/hoglet67/BeebFpga) emulation. The BeebFPGA is actively maintained and incorporates a range of improvements to the emulation over the official MiSTer Core.
 
 This core supports the original features of the MiSTer core:
-- BBC Model B and Master 128K.
-- Correct CPU for each model for best compatibility: 6502 for BBC Model B, 65C02 for Master 128K.
-- Optional co-processor module with 65C02.
-- Support Secondary SD card as well as images on Primary SD card.
-- Scandoubler with HQ2x for all modes.
-- Support for analogue joysticks.
-- Emulation of joystick with mouse.
+- BBC Model B and Master 128
+- Correct CPU for each model for best compatibility: 6502 for BBC Model B, 65C02 for Master 128
+- Optional co-processor module with 65C02
+- Support Secondary SD card as well as images on Primary SD card
+- Scandoubler with HQ2x for all modes
+- Support for analogue joysticks
+- Emulation of joystick with mouse
+- Support for RTC module to drive RTC on Master 128
 
 This core also supports the following additional features:
 - MMFSv2 allowing SSD files stored on the secondary SD card to be accessed directly.
 - DFS support to access SSD files on both the BBC B and the Master 128
+- Rounded characters in Mode 7
 - Music 5000 sound add-on
 - Improved compatibility with various software
 - Enhanced keyboard mapping
@@ -128,9 +130,8 @@ Aside: Back in the day I did have a Music 500 (essentially the same hardware as 
 
 ## Known Bugs and Limitations
 
-- Must manually apply reset using the menu if you change the hardware configuration
+- You must manually apply reset using the menu if you change the hardware configuration
 - Only HDMI output has been tested. VGA may not be good (or working at all!)
-- Mode 7 characters don't look nice
 - Sound mixing between the Music 5000 output and the BBC sound isn't good. Don't play both at once.
 - The "VideoNuLA" (a modern upgrade to the original VideoULA) is not supported.
 - Selecting Drives 2 and 3 in DFS creates some odd results.

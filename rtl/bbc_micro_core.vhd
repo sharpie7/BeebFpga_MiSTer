@@ -1,6 +1,7 @@
 -- BBC Micro Core, designed to be platform independant
 --
 -- Copyright (c) 2020 David Banks
+-- Copyright (c) 2022 Iain Sharp
 --
 -- Based on previous work by Mike Stirling
 --
@@ -99,7 +100,7 @@ entity bbc_micro_core is
         -- Control input to exchange Keyboard and Mouse connections
 --        ps2_swap       : in    std_logic := '0'; -- IES New
 		
-		-- IES MISTer RTC            : in  std_logic_vector (64 downto 0);
+		RTC            : in  std_logic_vector (64 downto 0);
 
         -- Video
 		-- IES MISTer
@@ -2359,7 +2360,8 @@ begin
             r_nw         => rtc_r_nw,
             adi          => rtc_adi,
             do           => rtc_do,
-            keyb_dip     => keyb_dip
+            keyb_dip     => keyb_dip,
+				RTC			 => RTC
         );
 
     -- RTC/CMOS is controlled from the system

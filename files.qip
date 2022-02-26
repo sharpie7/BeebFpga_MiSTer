@@ -45,6 +45,8 @@ set_global_assignment -name VERILOG_FILE rtl/Tube/tube.v
 set_global_assignment -name VHDL_FILE rtl/Tube/tube_comp_pack.vhd
 set_global_assignment -name VERILOG_FILE rtl/fdc1772/fdc1772.v
 set_global_assignment -name VERILOG_FILE rtl/fdc1772/floppy.v
+set_global_assignment -name VERILOG_FILE rtl/rtc_chip.v
 set_global_assignment -name VHDL_FILE rtl/bbc_micro_core.vhd -hdl_version VHDL_2008
+
 
 

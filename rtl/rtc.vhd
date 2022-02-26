@@ -19,7 +19,8 @@ entity rtc is
         adi          : in  std_logic_vector(7 downto 0); -- address/data in
         do           : out std_logic_vector(7 downto 0); -- data out
         -- bits 0..3 set mode; bit 4 sets autoboot
-        keyb_dip     : in  std_logic_vector(7 downto 0)  -- keyboard DIP
+        keyb_dip     : in  std_logic_vector(7 downto 0);  -- keyboard DIP
+		RTC          : in  std_logic_vector(64 downto 0)
     );
 end entity;
 
@@ -175,12 +176,52 @@ architecture rtl of rtc is
     );
 
     signal rtc_state : RTC_STATE_TYPE := INIT;
+	
+	
+    component rtc_chip port
+	 (
+		clk     : in std_logic;
+		rst_n   : in std_logic;
+		
+		irq     : out std_logic;
+		
+		address : in std_logic_vector(5 downto 0);
+		
+		rd      : in std_logic;
+		rddata  : out std_logic_vector(7 downto 0);
+		
+		wr      : in std_logic;
+		wrdata  : in std_logic_vector(7 downto 0);
+
+		RTC     : in std_logic_vector(64 downto 0)
+	 );
+	 end component;
+
+	 signal rtc_rd, rtc_wr : std_logic;
+	 signal rtc_do : std_logic_vector(7 downto 0);
 
 begin
+
+    mc146818 : rtc_chip
+	 port map
+	 (
+		clk     => clk,
+		rst_n   => '1',
+		address => addr,
+		rd      => rtc_rd,
+		rddata  => rtc_do,
+		wr      => rtc_wr,
+		wrdata  => adi,
+		RTC     => RTC
+	 );
+
 
     process(clk,reset_n)
     begin
         if rising_edge(clk) then
+		
+			rtc_wr <= '0';
+            rtc_rd <= '0';
 
             if hard_reset_n = '0' then
                 rtc_state <= INIT;
@@ -228,10 +269,19 @@ begin
                             -- Latch the Write Data on the falling edge of rtc_ds
                             if ce = '1' and ds = '0' and ds_r = '1' and r_nw = '0' then
                                 rtc_ram(to_integer(unsigned(addr))) <= adi;
+								rtc_wr <= '1';
                             end if;
 
                             -- Read Data
-                            do <= rtc_ram(to_integer(unsigned(addr)));
+                            if ce = '1' and ds = '0' and ds_r = '1' and r_nw = '1' then
+                                rtc_rd <= '1';
+                            end if;
+
+                            if addr <= "001100" then
+                                do <= rtc_do;
+                            else
+                                do <= rtc_ram(to_integer(unsigned(addr)));
+                            end if;
                         end if;
                 end case;
             end if;

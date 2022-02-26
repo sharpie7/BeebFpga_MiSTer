@@ -1,6 +1,7 @@
 //============================================================================
 //  BBCMicro port to MiSTer
 //  Copyright (C) 2018-2019 Sorgelig
+//  Copyright (C) 2022 Iain Sharp
 //
 //  This program is free software; you can redistribute it and/or modify it
 //  under the terms of the GNU General Public License as published by the Free
@@ -563,7 +564,7 @@ bbc_micro_core BBCMicro
 	.caps_led(),
 	.shift_led(),
 	
-	//.RTC(RTC),
+	.RTC(RTC),
 
 	.keyb_dip({4'b0000, status[AUTO_START_OPT], ~status[9:7]}),
 	
