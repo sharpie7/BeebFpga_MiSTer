@@ -3,7 +3,7 @@
 An experiment in building a BBC Micro MiSTer core by using the [official core](https://github.com/MiSTer-devel/BBCMicro_MiSTer) harness with the updates in the [BeebFPGA](https://github.com/hoglet67/BeebFpga) emulation. The BeebFPGA is actively maintained and incorporates a range of improvements to the emulation over the official MiSTer Core.
 
 This core supports the original features of the MiSTer core:
-- BBC Model B and Master 128
+- BBC Model B and Master 128 emulation
 - Correct CPU for each model for best compatibility: 6502 for BBC Model B, 65C02 for Master 128
 - Optional co-processor module with 65C02
 - Support Secondary SD card as well as images on Primary SD card
@@ -21,6 +21,8 @@ This core also supports the following additional features:
 - Enhanced keyboard mapping
 
 ## Installing and Using
+
+Copy the file `releases/BBCMicro_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. You can then select the file from the MiSTer boot menu or set to autoboot by editing the `bootcore` in `MiSTer.ini`.
 
 ## Filing Systems
 
