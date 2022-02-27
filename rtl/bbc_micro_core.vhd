@@ -62,15 +62,15 @@ entity bbc_micro_core is
     generic (
         IncludeAMXMouse    : boolean := true;
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := true;
-        IncludeICEDebugger : boolean := false; -- Not tested in this project
-        IncludeCoPro6502   : boolean := true;  -- The three co pro options
+        IncludeMusic5000   : boolean := false; -- Disable if building Debugger due to RAM limitations
+        IncludeICEDebugger : boolean := true;
+        IncludeCoPro6502   : boolean := false;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project
         UseOrigKeyboard    : boolean := false; -- Not tested in this project
 		  UseT65Core         : boolean := true;  -- Classic 6502 (for BBC B)
-		  UseAlanDCore       : boolean := true;  -- 65C02 (for BBC Master)
+		  UseAlanDCore       : boolean := false;  -- 65C02 (for BBC Master)
         OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip; IES New
     );
     port (
@@ -179,10 +179,10 @@ entity bbc_micro_core is
 		joystick2_y    : in  std_logic_vector(11 downto 0);
 		joystick2_fire : in  std_logic;
 
-        -- ICE T65 Deubgger 57600 baud serial
-        avr_reset      : in    std_logic;   -- active high; IES New
-        avr_RxD        : in    std_logic; -- IES New
-        avr_TxD        : out   std_logic; -- IES New
+        -- ICE T65 Deubgger 115200 baud serial
+        avr_reset      : in    std_logic;   -- active high;
+        avr_RxD        : in    std_logic;
+        avr_TxD        : out   std_logic;
 
         -- Current CPU address, e.g. to drive a hex display
         cpu_addr       : out   std_logic_vector(15 downto 0);
@@ -659,50 +659,52 @@ begin
     -- COMPONENT INSTANCES
     -------------------------
 
---    GenDebug: if IncludeICEDebugger generate
---
---        core : entity work.MOS6502CpuMonCore
---            generic map (
---                UseT65Core   => UseT65Core,
---                UseAlanDCore => UseAlanDCore
---                )
---            port map (
---                clock_avr    => clock_avr,
---                busmon_clk   => clock_48,
---                busmon_clken => cpu_clken1,
---                cpu_clk      => clock_48,
---                cpu_clken    => cpu_clken,
---                IRQ_n        => cpu_irq_n,
---                NMI_n        => cpu_nmi_n,
---                Sync         => cpu_sync,
---                Addr         => cpu_a(15 downto 0),
---                R_W_n        => cpu_r_nw,
---                Din          => cpu_di,
---                Dout         => cpu_do,
---                SO_n         => cpu_so_n,
---                Res_n        => reset_n,
---                Rdy          => cpu_ready,
---                trig         => "00",
---                avr_RxD      => avr_RxD,
---                avr_TxD      => avr_TxD,
---                sw_reset_cpu => '0',
---                sw_reset_avr => avr_reset,
---                led_bkpt     => open,
---                led_trig0    => open,
---                led_trig1    => open,
---                tmosi        => open,
---                tdin         => open,
---                tcclk        => open
---                );
---
---        process(clock_48)
---        begin
---            if rising_edge(clock_48) then
---                cpu_clken1 <= cpu_clken;
---            end if;
---        end process;
---
---    end generate;
+   GenDebug: if IncludeICEDebugger generate
+
+       core : entity work.MOS6502CpuMonCore
+           generic map (
+               UseT65Core   => UseT65Core,
+               UseAlanDCore => UseAlanDCore
+               )
+           port map (
+               clock_avr    => clock_avr,
+               busmon_clk   => clock_48,
+               busmon_clken => cpu_clken1,
+               cpu_clk      => clock_48,
+               cpu_clken    => cpu_clken,
+               IRQ_n        => cpu_irq_n,
+               NMI_n        => cpu_nmi_n,
+               Sync         => cpu_sync_t65,
+               Addr         => cpu_a_t65(15 downto 0),
+               R_W_n        => cpu_r_nw_t65,
+               Din          => cpu_di,
+               Dout         => cpu_do_t65,
+               SO_n         => cpu_so_n,
+               Res_n        => reset_n,
+               Rdy          => cpu_ready,
+               trig         => "00",
+               avr_RxD      => avr_RxD,
+               avr_TxD      => avr_TxD,
+               sw_reset_cpu => '0',
+               sw_reset_avr => avr_reset,
+               led_bkpt     => open,
+               led_trig0    => open,
+               led_trig1    => open,
+               tmosi        => open,
+               tdin         => open,
+               tcclk        => open
+               );
+			   
+			   cpu_a(23 downto 16) <= (others => '0');
+
+       process(clock_48)
+       begin
+           if rising_edge(clock_48) then
+               cpu_clken1 <= cpu_clken;
+           end if;
+       end process;
+
+   end generate;
 
     GenT65Core: if UseT65Core and not IncludeICEDebugger generate
         core : entity work.T65
