@@ -170,6 +170,10 @@ module emu
 );
 
 
+// Uncomment line below to reduce memory requirements by eliminating Co-processor CPU memory and sideways RAM
+// This option is required when building the ICEDebugger on the DE10 Nano. Otherwise, leave undefined.
+`define use_small_memory
+
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
 assign {UART_RTS, UART_DTR} = '1;
@@ -185,9 +189,9 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 assign HDMI_FREEZE = 0;
 
- assign SDRAM_DQ[15:2] = 'Z;	
- assign SDRAM_DQ[0] = UART_TXD;
- assign SDRAM_DQ[1] = 'Z;
+ assign SDRAM_DQ[15:0] = 'Z;	
+// assign SDRAM_DQ[0] = UART_TXD;
+// assign SDRAM_DQ[1] = 'Z;
 // assign SDRAM_A[0] = sdmiso; // brown
 // assign SDRAM_A[1] = sdss;   // red
 // assign SDRAM_A[2] = sdclk;  // orange
@@ -271,7 +275,6 @@ wire clk_sys; // IES: 96MHz (32 * 3), (24 * 4)
 wire clk_48 = clk_sys & ce_48;
 wire clk_32 = clk_sys & ce_32;
 wire clk_24 = clk_sys & ce_24;
-wire clk_16 = clk_sys & ce_16;
 
 pll pll
 (
@@ -283,12 +286,10 @@ pll pll
 (* direct_enable=1 *) reg ce_32;
 (* direct_enable=1 *) reg ce_48;
 (* direct_enable=1 *) reg ce_24;
-(* direct_enable=1 *) reg ce_16;
 always @(negedge clk_sys) begin
 	reg [1:0] div32;
 	reg [0:0] div48;
 	reg [1:0] div24;
-	reg [2:0] div16;
 	
 	div48 <= div48 + 1'd1;
 	ce_48 <= !div48;
@@ -300,9 +301,6 @@ always @(negedge clk_sys) begin
 	if(div32 == 2) div32 <= 0;
 	ce_32 <= !div32;
 	
-	div16 <= div16 + 1'd1;
-	if(div16 == 5) div16 <= 0;
-	ce_16 <= !div16;
 	
 end
 
@@ -492,12 +490,17 @@ always_comb begin
 end
 
 reg [7:0] ram_dout;
-//reg [7:0] ram[13 * 16384];
-//always @(posedge clk_sys) if(mem_addr[18] & old_we & ~mem_we_n) ram[mem_addr[17:0]] <= mem_din;
-// For debugger modified so that the RAM for coprocessor and ROM slots is not allocated and not writeable
-reg [7:0] ram[5 * 16384];
-always @(posedge clk_sys) if(mem_addr[18] & mem_addr[17] & old_we & ~mem_we_n) ram[mem_addr[16:0]] <= mem_din;
-always @(posedge clk_sys) if(mem_addr[17]) ram_dout <= ram[mem_addr[16:0]]; else ram_dout <=0;
+
+// See definition of use_small_memory for explanation
+`ifdef use_small_memory
+	reg [7:0] ram[5 * 16384];
+	always @(posedge clk_sys) if(mem_addr[18] & mem_addr[17] & old_we & ~mem_we_n) ram[mem_addr[16:0]] <= mem_din;
+	always @(posedge clk_sys) if(mem_addr[17]) ram_dout <= ram[mem_addr[16:0]]; else ram_dout <=0;
+`else
+	reg [7:0] ram[212992];
+	always @(posedge clk_sys) if(mem_addr[18] & old_we & ~mem_we_n) ram[mem_addr[17:0]] <= mem_din;
+	always @(posedge clk_sys) ram_dout <= ram[mem_addr[17:0]];
+`endif
 
 
 reg old_we;
@@ -537,8 +540,7 @@ wire [7:0] joyb_y = 8'hFF - {~joy2_y[7],joy2_y[6:0]};
 
 wire       ce_pix;
 
-bbc_micro_core BBCMicro
-(
+bbc_micro_core BBCMicro(
     .clksys(clk_sys),
 	.clock_32(clk_32),
 	.clock_48(clk_48),

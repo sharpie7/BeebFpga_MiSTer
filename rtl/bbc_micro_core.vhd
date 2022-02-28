@@ -58,12 +58,13 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
+
 entity bbc_micro_core is
     generic (
         IncludeAMXMouse    : boolean := true;
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := false; -- Disable if building Debugger due to RAM limitations
-        IncludeICEDebugger : boolean := true;
+        IncludeMusic5000   : boolean := false; -- Enable Music 5000
+        IncludeICEDebugger : boolean := true;  -- Enable to include ATOMBUSMon ICE debugger. If set then `define use_small_memory in BBCMicro.sv and unset IncludeCoPro6502 and IncludeMusic5000
         IncludeCoPro6502   : boolean := false;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
@@ -71,7 +72,7 @@ entity bbc_micro_core is
         UseOrigKeyboard    : boolean := false; -- Not tested in this project
 		  UseT65Core         : boolean := true;  -- Classic 6502 (for BBC B)
 		  UseAlanDCore       : boolean := false;  -- 65C02 (for BBC Master)
-        OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip; IES New
+        OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip
     );
     port (
         -- Clocks
@@ -688,8 +689,8 @@ begin
                sw_reset_cpu => '0',
                sw_reset_avr => avr_reset,
                led_bkpt     => open,
-               led_trig0    => open,
-               led_trig1    => open,
+               led_trig0    => io_sheila,
+               led_trig1    => cpu_irq_n,
                tmosi        => open,
                tdin         => open,
                tcclk        => open
