@@ -608,7 +608,7 @@ bbc_micro_core BBCMicro
 	.joystick2_fire(~status[11] ? ~joy2[4] : ~af),
 	
 	.avr_reset(reset),
-	.avr_RxD(SDRAM_DQ[1]),
+	.avr_RxD(UART_RXD),
 	.avr_TxD(UART_TXD),
 
 	.cpu_addr(), // IES: Debugging
