@@ -67,7 +67,9 @@ entity MOS6502CpuMonCore is
         -- OHO_DY1 connected to test connector
         tmosi           : out   std_logic;
         tdin            : out   std_logic;
-        tcclk           : out   std_logic
+        tcclk           : out   std_logic;
+		
+		m128_mode      : in    std_logic
     );
 end MOS6502CpuMonCore;
 
@@ -91,9 +93,17 @@ architecture behavioral of MOS6502CpuMonCore is
 
     signal cpu_addr_us   : unsigned (15 downto 0);
     signal cpu_dout_us   : unsigned (7 downto 0);
+	signal cpu_a_t65        :   std_logic_vector(23 downto 0);
+	signal cpu_do_t65       :   std_logic_vector(7 downto 0);
+	signal cpu_r_nw_t65     :   std_logic;
+	signal cpu_sync_t65     :   std_logic;
+	signal cpu_r_nw_c02     :   std_logic;
+	signal cpu_sync_c02     :   std_logic;
     signal cpu_reset_n   : std_logic;
 
     signal Regs          : std_logic_vector(63 downto 0);
+	 signal Regs_t65		: std_logic_vector(63 downto 0);
+	 signal Regs_c02		: std_logic_vector(63 downto 0);
     signal Regs1         : std_logic_vector(255 downto 0);
     signal last_PC       : std_logic_vector(15 downto 0);
     signal SS_Single     : std_logic;
@@ -210,24 +220,24 @@ begin
             mode            => "00",
             Abort_n         => '1',
             SO_n            => SO_n,
-            Res_n           => cpu_reset_n,
+            Res_n           => not m128_mode and cpu_reset_n,
             Enable          => cpu_clken_ss,
             Clk             => cpu_clk,
             Rdy             => '1',
             IRQ_n           => IRQ_n_masked,
             NMI_n           => NMI_n_masked,
-            R_W_n           => R_W_n_int,
-            Sync            => Sync_int,
-            A               => Addr_int,
+            R_W_n           => cpu_r_nw_t65,
+            Sync            => cpu_sync_t65,
+            A               => cpu_a_t65,
             DI              => Din_int,
-            DO              => Dout_int,
-            Regs            => Regs
+            DO              => cpu_do_t65,
+            Regs            => Regs_t65
         );
     end generate;
 
     GenAlanDCore: if UseAlanDCore generate
         inst_r65c02: entity work.r65c02 port map (
-            reset    => cpu_reset_n,
+            reset    => m128_mode and cpu_reset_n,
             clk      => cpu_clk,
             enable   => cpu_clken_ss,
             nmi_n    => NMI_n_masked,
@@ -235,14 +245,30 @@ begin
             di       => unsigned(Din_int),
             do       => cpu_dout_us,
             addr     => cpu_addr_us,
-            nwe      => R_W_n_int,
-            sync     => Sync_int,
+            nwe      => cpu_r_nw_c02,
+            sync     => cpu_sync_c02,
             sync_irq => open,
-            Regs     => Regs
+            Regs     => Regs_c02
         );
-        Dout_int <= std_logic_vector(cpu_dout_us);
-        Addr_int(15 downto 0) <= std_logic_vector(cpu_addr_us);
     end generate;
+	
+	process(m128_mode) -- Swap active buses between CPUs depending on the m128_mode
+    begin
+		if m128_mode = '1' then
+			Dout_int <= std_logic_vector(cpu_dout_us);
+			Addr_int(15 downto 0) <= std_logic_vector(cpu_addr_us);
+			Addr_int(23 downto 16) <= (others => '0');
+			R_W_n_int <= cpu_r_nw_c02;
+			Sync_int <= cpu_sync_c02;
+			Regs <= Regs_c02;
+		else
+			Dout_int <= cpu_do_t65;
+			Addr_int <= cpu_a_t65;
+			R_W_n_int <= cpu_r_nw_t65;
+			Sync_int <= cpu_sync_t65;
+			Regs <= Regs_t65;
+		end if;
+    end process;
 
 -- 00 IMP, INDX,  IMP, IMP,  ZP,   ZP,    ZP,   IMP,   IMP,  IMM,   IMPA,  IMP,  ABS,    ABS,   ABS,  IMP,
 -- 10 BRA, INDY,  IND, IMP,  ZP,   ZPX,   ZPX,  IMP,   IMP,  ABSY,  IMPA,  IMP,  ABS,    ABSX,  ABSX, IMP,

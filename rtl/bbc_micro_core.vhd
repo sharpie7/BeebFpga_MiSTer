@@ -71,7 +71,7 @@ entity bbc_micro_core is
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project
         UseOrigKeyboard    : boolean := false; -- Not tested in this project
 		  UseT65Core         : boolean := true;  -- Classic 6502 (for BBC B)
-		  UseAlanDCore       : boolean := false;  -- 65C02 (for BBC Master)
+		  UseAlanDCore       : boolean := true;  -- 65C02 (for BBC Master)
         OverrideCMOS       : boolean := true   -- Overide CMOS/RTC mode settings with keyb_dip
     );
     port (
@@ -683,17 +683,18 @@ begin
                SO_n         => cpu_so_n,
                Res_n        => reset_n,
                Rdy          => cpu_ready,
-               trig         => "00",
+               trig         => io_sheila & cpu_irq_n,
                avr_RxD      => avr_RxD,
                avr_TxD      => avr_TxD,
                sw_reset_cpu => '0',
                sw_reset_avr => avr_reset,
                led_bkpt     => open,
-               led_trig0    => io_sheila,
-               led_trig1    => cpu_irq_n,
+               led_trig0    => open,
+               led_trig1    => open,
                tmosi        => open,
                tdin         => open,
-               tcclk        => open
+               tcclk        => open,
+			   m128_mode    => m128_mode
                );
 			   
 			   cpu_a(23 downto 16) <= (others => '0');
@@ -754,9 +755,11 @@ begin
         avr_TxD <= avr_RxD;
     end generate;
 	
+	
+
 	process(all) -- Swap active buses between CPUs depending on the m128_mode
-    begin
-		if m128_mode = '1' then
+	begin
+		if m128_mode = '1' or not IncludeICEDebugger then
 			cpu_do <= std_logic_vector(cpu_dout_us);
 			cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
 			cpu_a(23 downto 16) <= (others => '0');
@@ -768,8 +771,8 @@ begin
 			cpu_r_nw <= cpu_r_nw_t65;
 			cpu_sync <= cpu_sync_t65;
 		end if;
-    end process;
-	
+	end process;
+
 
     crtc : entity work.mc6845 port map (
         clock_48,
