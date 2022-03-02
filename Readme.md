@@ -19,6 +19,7 @@ This core also supports the following additional features:
 - Music 5000 sound add-on
 - Improved compatibility with various software
 - Enhanced keyboard mapping
+- In Circuit Emulator debugger for machine-code level debugging (optional)
 
 ## Installing and Using
 
