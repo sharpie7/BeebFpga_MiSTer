@@ -759,7 +759,7 @@ begin
 
 	process(all) -- Swap active buses between CPUs depending on the m128_mode
 	begin
-		if m128_mode = '1' or not IncludeICEDebugger then
+		if m128_mode = '1' and not IncludeICEDebugger then
 			cpu_do <= std_logic_vector(cpu_dout_us);
 			cpu_a(15 downto 0) <= std_logic_vector(cpu_addr_us);
 			cpu_a(23 downto 16) <= (others => '0');
