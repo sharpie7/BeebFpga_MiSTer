@@ -63,9 +63,9 @@ entity bbc_micro_core is
     generic (
         IncludeAMXMouse    : boolean := true;
         IncludeSID         : boolean := false; -- Not tested in this project
-        IncludeMusic5000   : boolean := false; -- Enable Music 5000
-        IncludeICEDebugger : boolean := true;  -- Enable to include ATOMBUSMon ICE debugger. If set then `define use_small_memory in BBCMicro.sv and unset IncludeCoPro6502 and IncludeMusic5000
-        IncludeCoPro6502   : boolean := false;  -- The three co pro options
+        IncludeMusic5000   : boolean := true; -- Enable Music 5000
+        IncludeICEDebugger : boolean := false;  -- Enable to include ATOMBUSMon ICE debugger. If set then `define use_small_memory in BBCMicro.sv and unset IncludeCoPro6502 and IncludeMusic5000
+        IncludeCoPro6502   : boolean := true;  -- The three co pro options
         IncludeCoProSPI    : boolean := false; -- are currently mutually exclusive
         IncludeCoProExt    : boolean := false; -- (i.e. select just one)
         IncludeVideoNuLA   : boolean := false; -- Not tested in this project

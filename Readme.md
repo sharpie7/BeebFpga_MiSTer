@@ -22,7 +22,31 @@ This core also supports the following additional features:
 
 ## Installing and Using
 
+### Main Version
+
+Most users will just want the main version described here.
+
 Copy the file `releases/BBCMicro_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. You can then select the file from the MiSTer boot menu or set to autoboot by editing the `bootcore` in `MiSTer.ini`.
+
+### ICE (In Circuit Emulator) Version
+
+The ICE (In Circuit Emulator) Version contains special functions to enable debugging of system operation at the level of 6502 instructions. This is intended for advanced users who need a machine code level monitor/debugger. Most users can skip this section.
+
+The ICE Version includes the [AtomBusMon](https://github.com/hoglet67/AtomBusMon) debugger for the main CPU on the BBC B and Master 128. Due to memory limitations the ICE Version does not support sideways RAM in ROM slots 4-7, the co-processor, or the Music 5000.
+
+Copy the file `releases/BBCMicro_ICE_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. 
+
+The AtomBusMon interface is connected to an internal UART that is accessible via the Hard Processor System (HPS) on the DE-10 Nano. To access this from a host computer perform the following steps:
+- Connect a computer to the `UART` USB port on the DE-10 Nano.
+- On the computer open a serial terminal to the DE-10 Nano at 115200 baud.
+- Logon to the MiSTer Linux command line on the DE-10 Nano using the user ID `root` and password `1`. You may need to send a `return` character to get a logon prompt.
+- From the Linux command line connect to via the internal UART to the ICE. This can be done with the command `picocom -b115200 --omap delbs /dev/ttyS1` (i.e. connect to serial device `/dev/ttyS1` at 115200 BAUD with the Delete key mapped to backspace).
+- For how to use the ICE refer to the [AtomBusMon Wiki](https://github.com/hoglet67/AtomBusMon/wiki).
+- Note that you may get some logging messages from Linux mixed in with the AtomBusMon output!
+- To quit picocom use `Ctrl-A Ctrl-X`.
+
+Note that AtomBusMon is loaded with the 65C02 software branch. This can be used on both the BBC B 6502 and the Master 128 62C02, but it won't correctly disassemble "illegal" 6502 opcodes.
+
 
 ## Filing Systems
 
@@ -146,4 +170,6 @@ Thanks to the excellent work already done by several people, and with the partic
 The biggest problem was porting the FC1770 Floppy Disk Controller to the BBC B. [This site](http://www.adsb.co.uk/bbc/disk_controllers/) highlighted the important but obscure fact that the FC1770 is mapped to different addresses on the BBC B and the Master. What it doesn't mention is that also the bits in the "control register" are assigned to different values on the BBC B and Master. That took some finding.
 
 There is also a check for the presence of the FC1770 in the Acorn BBC B DFS ROM that seems to rely on reset behaviour of the chip that wasn't quite working in the original simulation. (It writes to the TRACK register and then reads back - I believe while the reset line is held low). That required some effort to find.
+
+There are some notes in the code on how to move between the normal version and the ICE version in the code. Note it requires modifying parameter in two files: BBCMicro.sv and bbc_micro_core.vhd.
 

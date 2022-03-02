@@ -172,7 +172,7 @@ module emu
 
 // Uncomment line below to reduce memory requirements by eliminating Co-processor CPU memory and sideways RAM
 // This option is required when building the ICEDebugger on the DE10 Nano. Otherwise, leave undefined.
-`define use_small_memory
+// `define use_small_memory
 
 assign ADC_BUS  = 'Z;
 assign USER_OUT = '1;
