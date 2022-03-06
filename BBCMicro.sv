@@ -232,10 +232,12 @@ video_freak video_freak
 // 0F-0G   - Image scaling
 // 0H      - Reserved - MMFS or Floppy
 // 0P-R (25-27) - MMFS V1 or V2
+// OPS (28)- M7 Video opt
 `include "build_id.v" 
 parameter AUTO_START_OPT = 12;
 parameter FILE_SYS_OPT_L = 25;
 parameter FILE_SYS_OPT_H = 27;
+parameter M7_VIDEO_OPT = 28;
 
 parameter CONF_STR = {
 	"BBCMicro;;",
@@ -253,6 +255,7 @@ parameter CONF_STR = {
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
 	"OFG,Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
+	"OS,M7 Analogue Video,576p,576i;",
 	"-;",
 	"OA,Mouse as Joystick,Yes,No;",
 	"OB,Swap Joysticks,No,Yes;",
@@ -565,6 +568,7 @@ bbc_micro_core BBCMicro(
 	.video_hblank(HBlank),
 	.video_vsync(VSync),
 	.video_hsync(HSync),
+	.m7_video_opt(status[M7_VIDEO_OPT]),
 
 	//.audio_sn(audio_sn),
 	.audio_l(AUDIO_L),

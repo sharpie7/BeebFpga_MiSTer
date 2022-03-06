@@ -104,7 +104,6 @@ entity bbc_micro_core is
 		RTC            : in  std_logic_vector (64 downto 0);
 
         -- Video
-		-- IES MISTer
 		video_sel      : out std_logic;
 		video_cepix    : out std_logic; -- IES Added from MISTer
 		
@@ -115,6 +114,7 @@ entity bbc_micro_core is
 		  video_hblank   : out   std_logic;
         video_vsync    : out   std_logic;
         video_hsync    : out   std_logic;
+		m7_video_opt   : in    std_logic;
 
         -- Audio
 		-- MISTer audio_sn       : out std_logic_vector (7 downto 0);
@@ -2343,7 +2343,7 @@ begin
     video_cepix <= crtc_cepix when ttxt_active = '0' else ttxt_clken;
     video_sel   <= not ttxt_active;
 	video_hblank<= crtc_hblank when ttxt_active = '0' else ttxt_hblank;
-	vga_mode <= ttxt_active;
+	vga_mode <= ttxt_active when m7_video_opt = '0' else '0';
 	
 
 -----------------------------------------------

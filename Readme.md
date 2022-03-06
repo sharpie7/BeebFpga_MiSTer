@@ -11,6 +11,7 @@ This core supports the original features of the MiSTer core:
 - Support for analogue joysticks
 - Emulation of joystick with mouse
 - Support for RTC module to drive RTC on Master 128
+- Analogue video out that closely resembles a real BBC Micro
 
 This core also supports the following additional features:
 - MMFSv2 allowing SSD files stored on the secondary SD card to be accessed directly.
@@ -27,7 +28,7 @@ This core also supports the following additional features:
 
 Most users will just want the main version described here.
 
-Copy the file `releases/BBCMicro_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. You can then select the file from the MiSTer boot menu or set to autoboot by editing the `bootcore` in `MiSTer.ini`.
+Copy the latest file `releases/BBCMicro_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. You can then select the file from the MiSTer boot menu or set to autoboot by editing the `bootcore` in `MiSTer.ini`.
 
 ### ICE (In Circuit Emulator) Version
 
@@ -154,11 +155,20 @@ There is also a lot of Music 5000 information and software on the [Retro-Kit](ht
 
 Aside: Back in the day I did have a Music 500 (essentially the same hardware as Music 5000). I could never get anything out of it that I thought sounded good and rapidly gave up trying. I am afraid all the demos I've heard now for Music 5000 don't improve my assessment! It always struck me as odd that what was at the time a pretty advanced system was still so "bleepy". Still, it has its fans and I am glad it's been rediscovered.
 
+## Analogue Video Out
+
+The core supports analogue video out on the VGA connector of the MiSTer expansion board, though the signals are not necessarily VGA compatible. If you are using HDMI output leave everything as default. If you want analogue output that is "like a real BBC" set `M7 Analogue Video` to `576i` in the menu. For more details see below. 
+
+In Modes 0-6 the default analogue video from the core is interlaced 50Hz standard definition TV. This is not compatible with standard VGA, but can work with 16k monitors and with TVs using a suitable VGA-SCART cable and the right settings in `MiSTer.ini`. Interlace can be turned off using `*TV 0,1` followed by changing the Mode on the BBC Micro.
+
+In Mode 7 the default analogue video from the core is 576p. This works well with the MiSTer HDMI scaler, but the analogue output isn't compatible with the other modes. In the menu you can set `M7 Analogue Video` to `576i` which is what a BBC Micro would output. This is similar to the interlaced outputs from other modes, and should work with the same displays, but doesn't display nicely on the HDMI output.
+
+As it was back in the day, interlaced video will judder a little on some displays. Welcome to the past!
+
 
 ## Known Bugs and Limitations
 
 - You must manually apply reset using the menu if you change the hardware configuration
-- Only HDMI output has been tested. VGA may not be good (or working at all!)
 - Sound mixing between the Music 5000 output and the BBC sound isn't good. Don't play both at once.
 - The "VideoNuLA" (a modern upgrade to the original VideoULA) is not supported.
 - Selecting Drives 2 and 3 in DFS creates some odd results.
