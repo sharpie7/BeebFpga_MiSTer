@@ -115,6 +115,7 @@ entity bbc_micro_core is
         video_vsync    : out   std_logic;
         video_hsync    : out   std_logic;
 		m7_video_opt   : in    std_logic;
+		odd_field      : out   std_logic;
 
         -- Audio
 		-- MISTer audio_sn       : out std_logic_vector (7 downto 0);
@@ -792,6 +793,7 @@ begin
         crtc_cursor,
         crtc_lpstb,
         vga_mode,
+		odd_field,
         crtc_ma,
         crtc_ra );
 

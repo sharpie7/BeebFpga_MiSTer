@@ -77,6 +77,7 @@ port (
     LPSTB       :   in  std_logic;
 
     VGA         :   in  std_logic;
+	ODD_FIELD_IO   :   out std_logic;
 
     -- Memory interface
     MA          :   out std_logic_vector(13 downto 0);
@@ -157,6 +158,7 @@ signal hblank2			:	std_logic;
 begin
     HSYNC <= hs; -- External HSYNC driven directly from internal signal
     VSYNC <= vs; -- External VSYNC driven directly from internal signal
+	 ODD_FIELD_IO <= odd_field;
 
     de0 <= '1' when h_display = '1' and v_display = '1' and r08_interlace(5 downto 4) /= "11" else '0';
 	 hblank0 <= h_display;

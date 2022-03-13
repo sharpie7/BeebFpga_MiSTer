@@ -569,6 +569,7 @@ bbc_micro_core BBCMicro(
 	.video_vsync(VSync),
 	.video_hsync(HSync),
 	.m7_video_opt(status[M7_VIDEO_OPT]),
+	.odd_field(odd_field),
 
 	//.audio_sn(audio_sn),
 	.audio_l(AUDIO_L),
@@ -672,7 +673,7 @@ assign AUDIO_S = 1;
 
 wire [1:0] scale = status[3:2];
 
-wire HSync, VSync, HBlank, VBlank, clk_sel;
+wire HSync, VSync, HBlank, VBlank, clk_sel, odd_field;
 wire [3:0] red_vid,green_vid,blue_vid;
 
 assign CLK_VIDEO = clk_sys;
@@ -691,8 +692,10 @@ video_mixer #(640, 1, 1) mixer
 	.G(green_vid),
 	.B(blue_vid)
 );
-
-assign VGA_F1 = 0;
+// Testing shows that best results for the HDMI output are:
+// Mode 0 - 6: Always set VGA_F1 to 0 even when interlaced - therefore and with ~clk_sel
+// Mode 7: When using progressive output then set VGA_F1 to 0, when using interlace output set VGA_F1 based on the interlace field
+assign VGA_F1 = (~clk_sel) & status[M7_VIDEO_OPT] & ~ odd_field;
 assign VGA_SL = scale ? scale - 1'd1 : 2'd0;
 
 //////////////////   SD   ///////////////////

@@ -28,7 +28,7 @@ This core also supports the following additional features:
 
 Most users will just want the main version described here.
 
-Copy the latest file `releases/BBCMicro_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. You can then select the file from the MiSTer boot menu or set to autoboot by editing the `bootcore` in `MiSTer.ini`.
+Copy the latest file `releases/BBCMicro_YYYYMMDD.rbf` to the `_Computer` or `_Computer/_Alternative` folder on the root of the MiSTer primary SD card. You can then select the file from the MiSTer boot menu or set to autoboot by editing the `bootcore` in `MiSTer.ini`.
 
 ### ICE (In Circuit Emulator) Version
 
@@ -36,7 +36,7 @@ The ICE (In Circuit Emulator) Version contains special functions to enable debug
 
 The ICE Version includes the [AtomBusMon](https://github.com/hoglet67/AtomBusMon) debugger for the main CPU on the BBC B and Master 128. Due to memory limitations the ICE Version does not support sideways RAM in ROM slots 4-7, the co-processor, or the Music 5000.
 
-Copy the file `releases/BBCMicro_ICE_YYYYMMDD.rbf` to the `Computer` or `Computer/_Alternative` folder on the root of the MiSTer primary SD card. 
+Copy the file `releases/BBCMicro_ICE_YYYYMMDD.rbf` to the `_Computer` or `_Computer/_Alternative` folder on the root of the MiSTer primary SD card. 
 
 The AtomBusMon interface is connected to an internal UART that is accessible via the Hard Processor System (HPS) on the DE-10 Nano. To access this from a host computer perform the following steps:
 - Connect a computer to the `UART` USB port on the DE-10 Nano.
