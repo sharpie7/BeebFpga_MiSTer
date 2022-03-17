@@ -385,6 +385,8 @@ signal crtc_lpstb       :   std_logic;
 signal crtc_ma          :   std_logic_vector(13 downto 0);
 signal crtc_ra          :   std_logic_vector(4 downto 0);
 signal crtc_hblank      :   std_logic;
+signal delayed_crtc_hblank : std_logic;
+signal delayed_crtc_hblank2 : std_logic;
 
 -- Decoded display address after address translation for hardware
 -- scrolling
@@ -2344,9 +2346,21 @@ begin
     video_blue  <= (others => b_out(0));
     video_cepix <= crtc_cepix when ttxt_active = '0' else ttxt_clken;
     video_sel   <= not ttxt_active;
-	video_hblank<= crtc_hblank when ttxt_active = '0' else ttxt_hblank;
+	video_hblank<= delayed_crtc_hblank2 when ttxt_active = '0' else ttxt_hblank;
 	vga_mode <= ttxt_active when m7_video_opt = '0' else '0';
 	
+	-- Pass delayed crtc_hblank to external EMU module to prevent last pixel on line being cut off
+	-- A similar treatment with delayed_DISEN appears to be used on the vidproc_orig
+	process(clock_48) 
+	begin
+		if rising_edge(clock_48) then
+            if vid_clken = '1' then
+				delayed_crtc_hblank2 <= delayed_crtc_hblank;
+				delayed_crtc_hblank <= crtc_hblank;
+			end if;
+		end if;
+	end process;
+
 
 -----------------------------------------------
 -- Master 128 additions

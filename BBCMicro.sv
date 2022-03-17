@@ -189,22 +189,15 @@ assign BUTTONS   = 0;
 assign VGA_SCALER= 0;
 assign HDMI_FREEZE = 0;
 
- assign SDRAM_DQ[15:0] = 'Z;	
-// assign SDRAM_DQ[0] = UART_TXD;
-// assign SDRAM_DQ[1] = 'Z;
-// assign SDRAM_A[0] = sdmiso; // brown
-// assign SDRAM_A[1] = sdss;   // red
-// assign SDRAM_A[2] = sdclk;  // orange
-// assign SDRAM_A[3] = sdmosi;
-// assign SDRAM_A[4] = img_mounted;
-// assign SDRAM_A[5] = |img_size;
-// assign SDRAM_A[6] = vsd_sel;
-// assign SDRAM_A[7] = VBlank;
-// assign SDRAM_A[8] = clk_sel;
-// assign SDRAM_A[9] = ce_pix;
-// assign SDRAM_A[10] = HSync;
-// assign SDRAM_A[11] = VSync;
-// assign SDRAM_A[12] = CLK_VIDEO;
+ assign SDRAM_DQ[15:0] = 'Z;
+// assign SDRAM_DQ[0] = HSync;
+// assign SDRAM_DQ[1] = VSync;
+// assign SDRAM_DQ[2] = HBlank;
+// assign SDRAM_DQ[3] = VBlank;
+// assign SDRAM_DQ[4] = ce_pix;
+// assign SDRAM_DQ[5] = CLK_VIDEO;
+// assign SDRAM_DQ[6] = red_vid;
+
 
 wire [1:0] ar = status[14:13];
 video_freak video_freak

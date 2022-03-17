@@ -158,10 +158,10 @@ signal hblank2			:	std_logic;
 begin
     HSYNC <= hs; -- External HSYNC driven directly from internal signal
     VSYNC <= vs; -- External VSYNC driven directly from internal signal
-	 ODD_FIELD_IO <= odd_field;
+    ODD_FIELD_IO <= odd_field;
 
     de0 <= '1' when h_display = '1' and v_display = '1' and r08_interlace(5 downto 4) /= "11" else '0';
-	 hblank0 <= h_display;
+    hblank0 <= h_display;
 
     -- In Mode 7 DE Delay is set to 01, but in our implementation no delay is needed
     -- TODO: Fix SAA5050
@@ -170,7 +170,7 @@ begin
           de2 when r08_interlace(5 downto 4) = "10" else
           '0';
 			 
-	 HBLANK <= not hblank0 when r08_interlace(5 downto 4) = "00" else
+    HBLANK <= not hblank0 when r08_interlace(5 downto 4) = "00" else
 		  not hblank0 when r08_interlace(5 downto 4) = "01" else
 		  not hblank2 when r08_interlace(5 downto 4) = "10" else
 		  '1';
