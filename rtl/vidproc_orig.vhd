@@ -122,7 +122,9 @@ architecture rtl of vidproc_orig is
 -- Cursor generation - can span up to 32 pixels
 -- Segments 0 and 1 are 8 pixels wide
 -- Segment 2 is 16 pixels wide
+	constant M7_W : integer := 3;
     signal cursor_invert    :   std_logic;
+	signal cursor_invert_m7 :   std_logic_vector(M7_W downto 0);
     signal cursor_active    :   std_logic;
     signal cursor_counter   :   unsigned(1 downto 0);
 
@@ -283,6 +285,8 @@ begin
             BB <= '0';
             delayed_disen <= '0';
         elsif rising_edge(CLOCK) then
+		    -- Delayed cursor for use in teletext mode
+			cursor_invert_m7 <= cursor_invert_m7(M7_W-1 downto 0) & cursor_invert;
             if CLKEN = '1' then
                 -- Look up dot value in the palette.  Bits are as follows:
                 -- bit 3 - FLASH
@@ -305,14 +309,16 @@ begin
 
                 -- Display enable signal delayed by one clock
                 delayed_disen <= DISEN;
+				
+ 
             end if;
         end if;
     end process;
 
     -- Allow the 12MHz teletext signals to pass through without re-sampling
-    R(0) <= RR when r0_teletext = '0' else R_IN xor cursor_invert;
-    G(0) <= GG when r0_teletext = '0' else G_IN xor cursor_invert;
-    B(0) <= BB when r0_teletext = '0' else B_IN xor cursor_invert;
+    R(0) <= RR when r0_teletext = '0' else R_IN xor cursor_invert_m7(M7_W);
+    G(0) <= GG when r0_teletext = '0' else G_IN xor cursor_invert_m7(M7_W);
+    B(0) <= BB when r0_teletext = '0' else B_IN xor cursor_invert_m7(M7_W);
 
 	 -- IES: Make a consistent set of "virtual pixels" (same in all modes)
 	 -- which is what scansouble sees. 
