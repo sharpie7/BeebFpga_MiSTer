@@ -218,19 +218,30 @@ video_freak video_freak
 // 04 ( 4) - BBC B or Master
 // 05-06   - Co processor
 // 07-09   - Default video mode
-// OA (10) - Mouse as Joystick
-// 0B (11) - Swap joysticks
-// 0C (12) - Autostart
-// 0D-0E   - Aspect ratio
-// 0F-0G   - Image scaling
-// 0H      - Reserved - MMFS or Floppy
-// 0P-R (25-27) - MMFS V1 or V2
-// OPS (28)- M7 Video opt
+// A (10) - Mouse as Joystick
+// B (11) - Swap joysticks
+// C (12) - Autostart
+// D-E   - Aspect ratio
+// F-G   - Image scaling
+// H      - Reserved - MMFS or Floppy
+// P-R (25-27) - MMFS V1 or V2
+// S (28)- M7 Video opt
+// T (29)- Master shadow video mode on boot
+// U (30)- Master default FS
+//
+// Mask index : 
+// 0 - MMFS Active
+// 1 - DFS active
+// 2 - Master selected
+// 3 - Master selected and both MMFS and DFS active
+
 `include "build_id.v" 
 parameter AUTO_START_OPT = 12;
 parameter FILE_SYS_OPT_L = 25;
 parameter FILE_SYS_OPT_H = 27;
 parameter M7_VIDEO_OPT = 28;
+parameter M128_SHADOW_OPT = 29;
+parameter M128_FS_OPT = 30;
 
 parameter CONF_STR = {
 	"BBCMicro;;",
@@ -244,6 +255,8 @@ parameter CONF_STR = {
 	"O4,Model,B(MOS6502),Master(R65SC12);",
 	"O56,Co-Processor,None,MOS65C02;",
 	"O79,Default video mode,0,1,2,3,4,5,6,7;",
+	"h2OT,Default video mem.,Shadow,Main;",
+	"h3OU,Default Filesystem,MMFS,DFS;",
 	"-;",
 	"ODE,Aspect ratio,Original,Full Screen,[ARC1],[ARC2];",
 	"O23,Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%;",
@@ -260,10 +273,15 @@ parameter CONF_STR = {
 
 wire mmfsv1;
 wire mmfsv2;
+wire mmfs;
 wire dfs;
+wire model_master;
 assign mmfsv1 = (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 0) || (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 3);
 assign mmfsv2 = (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 1) || (status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] === 4);
+assign mmfs = mmfsv1 || mmfsv2;
 assign dfs = status[FILE_SYS_OPT_H:FILE_SYS_OPT_L] >= 2;
+assign model_master = status[4];
+
 
 /////////////////  CLOCKS  ////////////////////////
 
@@ -347,7 +365,7 @@ hps_io #(.CONF_STR(CONF_STR),.VDNUM(3),.BLKSZ(2)) hps_io // IES Updated from c24
 
 	.buttons(buttons),
 	.status(status),
-	.status_menumask({dfs , (mmfsv1 || mmfsv2)}),
+	.status_menumask({(model_master && dfs && mmfs), model_master, dfs , mmfs}),
 	.forced_scandoubler(forced_scandoubler),
 	.gamma_bus(gamma_bus),
 
@@ -387,7 +405,7 @@ wire reset = RESET | status[0] | buttons[1] | (status[AUTO_START_OPT] & img_moun
 ////////////////  MEMORY  /////////////////////////
 
 reg m128 = 0;
-always @(posedge clk_sys) if(reset_req) m128 <= status[4];
+always @(posedge clk_sys) if(reset_req) m128 <= model_master;
 
 wire        mem_we_n;
 wire [18:0] mem_addr;
@@ -480,7 +498,7 @@ always_comb begin
 		'b0_00_11,
 		'b1_10_01: rom_data = (dfs) ? rom_dout : 0; // Enable/disable DFS
 		'b0_10_00,
-		'b1_00_11: rom_data = (mmfsv1 || mmfsv2) ? rom_dout : 0; // Enable/disable MMFS
+		'b1_00_11: rom_data = (mmfs) ? rom_dout : 0; // Enable/disable MMFS
 		  default: rom_data = 0;
 	endcase
 end
@@ -564,7 +582,6 @@ bbc_micro_core BBCMicro(
 	.m7_video_opt(status[M7_VIDEO_OPT]),
 	.odd_field(odd_field),
 
-	//.audio_sn(audio_sn),
 	.audio_l(AUDIO_L),
 	.audio_r(AUDIO_R),
 
@@ -586,6 +603,12 @@ bbc_micro_core BBCMicro(
 	.RTC(RTC),
 
 	.keyb_dip({4'b0000, status[AUTO_START_OPT], ~status[9:7]}),
+	
+	// cmos_options stores extra options that would normally be in CMOS on Master 128
+	// Format:
+	// b0 = Use shadow memory for default mode (1 = Yes)
+	// b4-1 = ROM # for default file system: 3 for MMFS or 9 for DFS
+	.cmos_options({(~dfs || (mmfs && dfs && ~status[M128_FS_OPT]))?4'd3:4'd9, ~status[M128_SHADOW_OPT]}),
 	
 	.ext_keyb_led1(),
 	.ext_keyb_led2(),

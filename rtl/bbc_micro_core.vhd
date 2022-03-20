@@ -143,6 +143,9 @@ entity bbc_micro_core is
 
         -- Keyboard DIP switches
         keyb_dip       : in    std_logic_vector(7 downto 0);
+		
+		-- CMOS Options for Master 128
+		cmos_options   : in    std_logic_vector(4 downto 0);
 
         -- Original Keyboard
         ext_keyb_led1  : out   std_logic; -- IES New
@@ -2383,6 +2386,7 @@ begin
             adi          => rtc_adi,
             do           => rtc_do,
             keyb_dip     => keyb_dip,
+			   cmos_options => cmos_options,
 				RTC			 => RTC
         );
 

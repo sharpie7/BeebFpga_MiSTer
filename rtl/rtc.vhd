@@ -20,6 +20,7 @@ entity rtc is
         do           : out std_logic_vector(7 downto 0); -- data out
         -- bits 0..3 set mode; bit 4 sets autoboot
         keyb_dip     : in  std_logic_vector(7 downto 0);  -- keyboard DIP
+		cmos_options : in  std_logic_vector(4 downto 0);  -- Extra CMOS options for Master 128
 		RTC          : in  std_logic_vector(64 downto 0)
     );
 end entity;
@@ -97,6 +98,10 @@ architecture rtl of rtc is
 --
 --   255       EEPROM size
 
+    --   b0-b3  Default filing system ROM overlayed by CMOS_Extra
+    --    b4-b7  Default language ROM   
+	constant ini5 : std_logic_vector(7 downto 0) := x"C3";
+
     -- bits 2..0 (mode) overlaid by DIP switches
     constant ini10 : std_logic_vector(7 downto 0) := x"F7";
 
@@ -123,7 +128,7 @@ architecture rtl of rtc is
         x"00", -- CMOS  2 - Econet file server identity (hi)
         x"EB", -- CMOS  3 - Econet print server identity (lo)
         x"00", -- CMOS  4 - Econet print server identity (hi)
-        x"C3", -- CMOS  5 - Default Filing System / Language (default file system MMFS)
+        ini5,  -- CMOS  5 - Default Filing System / Language (default file system MMFS)
         x"FF", -- CMOS  6 - ROM frugal bits (*INSERT/*UNPLUG)
         x"FF", -- CMOS  7 - ROM frugal bits (*INSERT/*UNPLUG)
         x"00", -- CMOS  8 - Edit startup settings
@@ -172,7 +177,7 @@ architecture rtl of rtc is
 
 
     type RTC_STATE_TYPE is (
-        INIT, WRITE_10, WRITE_16, RUNNING
+        INIT, WRITE_5, WRITE_10, WRITE_16, RUNNING
     );
 
     signal rtc_state : RTC_STATE_TYPE := INIT;
@@ -235,14 +240,19 @@ begin
                         ds_r <= '0';
                         do <= (others => '0');
                         if OverrideCMOS then
-                            rtc_state <= WRITE_10;
+                            rtc_state <= WRITE_5;
                         else
                             rtc_state <= RUNNING;
                         end if;
 
+					when WRITE_5 =>
+					-- Copy FS ROM settings
+						rtc_ram(19) <= ini5(7 downto 4) & cmos_options(4 downto 1);
+						rtc_state <= WRITE_10;
+					
                     -- Copy the screen mode from the DIP switches into CMOS on power up
                     when WRITE_10 =>
-                        rtc_ram(24) <= ini10 xor ("00000" & keyb_dip(2 downto 0));
+                        rtc_ram(24) <= ini10 xor ("0000" & cmos_options(0) & keyb_dip(2 downto 0));
                         rtc_state <= WRITE_16;
 
                     -- Copy the noboot/boot mode from the DIP switches into CMOS on power up
