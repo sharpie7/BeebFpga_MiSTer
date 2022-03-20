@@ -172,7 +172,7 @@ As it was back in the day, interlaced video will judder a little on some display
 
 - You must manually apply reset using the menu if you change the hardware configuration
 - Sound mixing between the Music 5000 output and the BBC sound isn't good. Don't play both at once.
-- Master 128 does not save its CMOS settings, though some key values can be configured via F12 OSD
+- Master 128 does not save its CMOS settings, though some important values can be configured via F12 OSD
 - The "VideoNuLA" (a modern upgrade to the original VideoULA) is not supported.
 - Selecting Drives 2 and 3 in DFS creates some odd results.
 
@@ -184,6 +184,8 @@ Thanks to the excellent work already done by several people, and with the partic
 The biggest problem was porting the FC1770 Floppy Disk Controller to the BBC B. [This site](http://www.adsb.co.uk/bbc/disk_controllers/) highlighted the important but obscure fact that the FC1770 is mapped to different addresses on the BBC B and the Master. What it doesn't mention is that also the bits in the "control register" are assigned to different values on the BBC B and Master. That took some finding.
 
 There is also a check for the presence of the FC1770 in the Acorn BBC B DFS ROM that seems to rely on reset behaviour of the chip that wasn't quite working in the original simulation. (It writes to the TRACK register and then reads back - I believe while the reset line is held low). That required some effort to find.
+
+Saving the CMOS for the Master 128 would be nice, but it seems that MiSTer only offers its simple option to write files if you use the NVRAM tag in an MRA file which I want to avoid as it makes the install messy.
 
 There are some notes in the code on how to move between the normal version and the ICE version in the code. Note it requires modifying parameter in two files: BBCMicro.sv and bbc_micro_core.vhd.
 
