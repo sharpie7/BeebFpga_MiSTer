@@ -89,6 +89,8 @@ Both MMFS and DFS may be activated at once. However, I am told by the author of 
 
 If you have both active then note that MMFS will treat `*DISC` and `*DISK` commands as belonging to it. You can used `*OPT 5,1` to disable this and have DFS respond to these commands.
 
+If you have both active then for the Master 128 you can choose which to have as default (it will put the right value in the CMOS). On the Model B the highest numbered ROM (MMFS) will be the default.
+
 ## Hardware
 
 The simulated machines are pretty close to the standard configurations.
@@ -170,6 +172,7 @@ As it was back in the day, interlaced video will judder a little on some display
 
 - You must manually apply reset using the menu if you change the hardware configuration
 - Sound mixing between the Music 5000 output and the BBC sound isn't good. Don't play both at once.
+- Master 128 does not save its CMOS settings, though some key values can be configured via F12 OSD
 - The "VideoNuLA" (a modern upgrade to the original VideoULA) is not supported.
 - Selecting Drives 2 and 3 in DFS creates some odd results.
 
